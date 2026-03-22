@@ -1,0 +1,26 @@
+services:
+  blog-matthesketh-pro:
+    build:
+      context: .
+    container_name: blog-matthesketh-pro
+    ports:
+      - "127.0.0.1:60612:60612"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M

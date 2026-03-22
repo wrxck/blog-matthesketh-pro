@@ -1,0 +1,178 @@
+<template>
+  <div class="tags-page">
+    <h1 class="page-title" u-if="!currentTag()">TAGS</h1>
+    <h1 class="page-title" u-if="currentTag()">TAG: {{ currentTag().toUpperCase() }}</h1>
+
+    <div class="tag-cloud" u-if="!currentTag()">
+      <a
+        u-for="entry in tagCounts()"
+        :href="'/tags/' + entry[0]"
+        class="tag-pill"
+      >
+        {{ entry[0] }} <span class="tag-count">({{ entry[1] }})</span>
+      </a>
+    </div>
+
+    <div class="posts-list" u-if="currentTag()">
+      <a
+        u-for="post in taggedPosts()"
+        :href="'/blog/' + post.slug"
+        class="post-card card-hover"
+      >
+        <div class="post-header">
+          <h2 class="post-title">{{ post.data.title }}</h2>
+          <span class="post-date">{{ formatDate(post.data.date) }}</span>
+        </div>
+        <p class="post-description">{{ post.data.description }}</p>
+      </a>
+      <p u-if="taggedPosts().length === 0" class="no-results">No posts with this tag.</p>
+    </div>
+
+    <a href="/tags" class="back-link" u-if="currentTag()">All tags</a>
+  </div>
+</template>
+
+<script>
+import { computed } from '@matthesketh/utopia-core'
+import { currentRoute } from '@matthesketh/utopia-router'
+import { getCollection } from '@matthesketh/utopia-content'
+import '../../content.config'
+
+const allPosts = await getCollection('blog')
+const publishedPosts = allPosts
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+
+const currentTag = computed(() => {
+  const route = currentRoute()
+  return route ? route.params.tag || null : null
+})
+
+const tagCounts = computed(() => {
+  const counts = new Map()
+  publishedPosts.forEach((p) => {
+    const tags = p.data.tags || []
+    tags.forEach((t) => counts.set(t, (counts.get(t) || 0) + 1))
+  })
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+})
+
+const taggedPosts = computed(() => {
+  const tag = currentTag()
+  if (!tag) return []
+  return publishedPosts.filter((p) => {
+    const tags = p.data.tags || []
+    return tags.includes(tag)
+  })
+})
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+</script>
+
+<style scoped>
+.tags-page {
+  max-width: 800px;
+}
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.tag-pill {
+  font-size: 0.9rem;
+  padding: 0.4rem 1rem;
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  font-weight: 600;
+}
+.tag-pill:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.tag-count {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+.tag-pill:hover .tag-count {
+  color: var(--color-bg);
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.post-card {
+  display: block;
+  text-decoration: none;
+  color: var(--color-text);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.post-card:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.post-card:hover .post-title,
+.post-card:hover .post-date,
+.post-card:hover .post-description {
+  color: var(--color-bg);
+}
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.post-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  margin: 0;
+}
+.post-date {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.post-description {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+.back-link {
+  display: inline-block;
+  margin-top: 2rem;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+}
+.back-link:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.no-results {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+</style>

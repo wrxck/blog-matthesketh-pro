@@ -1,0 +1,34 @@
+{
+  "name": "blog-matthesketh-pro",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Matt Hesketh's Blog",
+  "type": "module",
+  "scripts": {
+    "dev": "utopia dev",
+    "build": "utopia build",
+    "preview": "utopia preview"
+  },
+  "dependencies": {
+    "@matthesketh/utopia-content": "^0.7.2",
+    "@matthesketh/utopia-core": "^0.7.0",
+    "@matthesketh/utopia-router": "^0.7.7",
+    "@matthesketh/utopia-runtime": "^0.7.2"
+  },
+  "devDependencies": {
+    "@matthesketh/utopia-cli": "^0.7.0",
+    "@matthesketh/utopia-vite-plugin": "^0.7.1",
+    "sharp": "^0.33.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ],
+    "overrides": {
+      "@matthesketh/utopia-content": "link:../utopiajs/packages/content"
+    }
+  }
+}

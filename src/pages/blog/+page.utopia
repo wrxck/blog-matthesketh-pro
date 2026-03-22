@@ -1,0 +1,226 @@
+<template>
+  <div class="post-layout" u-if="post()">
+    <article class="post-article">
+      <header class="post-header">
+        <h1 class="post-title">{{ post().data.title }}</h1>
+        <div class="post-meta">
+          <time class="post-date">{{ formatDate(post().data.date) }}</time>
+          <span class="reading-time">{{ readingTime(post().body) }}</span>
+        </div>
+        <div class="post-tags" u-if="post().data.tags && post().data.tags.length > 0">
+          <a u-for="tag in post().data.tags" :href="'/tags/' + tag" class="pill">{{ tag }}</a>
+        </div>
+      </header>
+
+      <div class="prose" u-html="post().html"></div>
+
+      <footer class="post-footer" u-if="relatedPosts().length > 0">
+        <h2 class="related-title">RELATED POSTS</h2>
+        <div class="related-list">
+          <a u-for="rp in relatedPosts()" :href="'/blog/' + rp.slug" class="related-link">
+            {{ rp.data.title }}
+          </a>
+        </div>
+      </footer>
+    </article>
+
+    <aside class="toc-sidebar" u-if="headings().length > 0">
+      <nav class="toc" aria-label="Table of contents">
+        <h3 class="toc-title">CONTENTS</h3>
+        <ul class="toc-list">
+          <li u-for="h in headings()" :class="'toc-item toc-' + h.level">
+            <a :href="'#' + h.id" class="toc-link">{{ h.text }}</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+  </div>
+
+  <div u-if="!post()">
+    <p>Post not found.</p>
+    <a href="/">Back to blog</a>
+  </div>
+</template>
+
+<script>
+import { computed } from '@matthesketh/utopia-core'
+import { currentRoute } from '@matthesketh/utopia-router'
+import { getCollection } from '@matthesketh/utopia-content'
+import '../../content.config'
+
+const allPosts = await getCollection('blog')
+
+const post = computed(() => {
+  const route = currentRoute()
+  const slug = route ? route.params.slug : ''
+  return allPosts.find((p) => p.slug === slug) || null
+})
+
+const headings = computed(() => {
+  const html = post()?.html
+  if (!html) return []
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const elements = doc.querySelectorAll('h2, h3')
+  return Array.from(elements).map((el) => ({
+    level: el.tagName.toLowerCase(),
+    text: el.textContent || '',
+    id: el.id || el.textContent?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') || '',
+  }))
+})
+
+const relatedPosts = computed(() => {
+  const current = post()
+  if (!current || !current.data.tags) return []
+  const tags = current.data.tags || []
+  return allPosts
+    .filter((p) => p.slug !== current.slug && !p.data.draft)
+    .filter((p) => {
+      const pTags = p.data.tags || []
+      return pTags.some((t) => tags.includes(t))
+    })
+    .slice(0, 3)
+})
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function readingTime(body) {
+  if (!body) return '1 min read'
+  const words = body.trim().split(/\s+/).length
+  const mins = Math.max(1, Math.round(words / 200))
+  return `${mins} min read`
+}
+</script>
+
+<style scoped>
+.post-layout {
+  display: flex;
+  gap: 3rem;
+  max-width: 1000px;
+}
+.post-article {
+  flex: 1;
+  min-width: 0;
+}
+.post-header {
+  margin-bottom: 3rem;
+}
+.post-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+.post-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pill {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+}
+.pill:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.post-footer {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--color-border);
+}
+.related-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0 0 1rem;
+}
+.related-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.related-link {
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+}
+.related-link:hover {
+  border-bottom-color: var(--color-border);
+}
+
+.toc-sidebar {
+  flex: 0 0 200px;
+  position: sticky;
+  top: 2rem;
+  height: max-content;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+.toc-title {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.toc-item {
+  margin-bottom: 0.5rem;
+}
+.toc-h3 {
+  padding-left: 1rem;
+}
+.toc-link {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.toc-link:hover {
+  color: var(--color-text);
+}
+
+@media (max-width: 800px) {
+  .post-layout {
+    flex-direction: column;
+  }
+  .toc-sidebar {
+    position: relative;
+    top: 0;
+    order: -1;
+    border: 1px solid var(--color-border);
+    padding: 1rem;
+    margin-bottom: 2rem;
+  }
+}
+</style>
