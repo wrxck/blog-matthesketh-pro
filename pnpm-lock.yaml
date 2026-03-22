@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@matthesketh/utopia-content':
-        specifier: ^0.7.3
-        version: 0.7.3(sharp@0.33.5)
+        specifier: ^0.7.4
+        version: 0.7.4(sharp@0.33.5)
       '@matthesketh/utopia-core':
         specifier: ^0.7.0
         version: 0.7.0
@@ -334,8 +334,8 @@ packages:
     resolution: {integrity: sha512-5DZ+iFlAgHlWMOYDc4Rk10rAQnf8UPp5lWJQvvu0+bBrjShEilvw3IlIJ0iJlUqtofQlRazg3JH/EfSEO3LAJg==}
     engines: {node: '>=20.0.0'}
 
-  '@matthesketh/utopia-content@0.7.3':
-    resolution: {integrity: sha512-dCGRsXaYbKT2oE46jMnbJFCku0frYKX9MydzoGjyWzn8cvPr7Fslo9KA0SksDSKA2Ehd8Nvjo772+XhqTDYx/Q==}
+  '@matthesketh/utopia-content@0.7.4':
+    resolution: {integrity: sha512-8PHWTaWAfOrVSF3IWrFicgYaDPqSYkXSCnU7jA0MvBh6alQxIYAHz1JnXa9ARbn1UfZ0VWbfdGACRqupWo31qA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       sharp: '>=0.33.0'
@@ -1240,7 +1240,7 @@ snapshots:
     dependencies:
       '@matthesketh/utopia-core': 0.7.0
 
-  '@matthesketh/utopia-content@0.7.3(sharp@0.33.5)':
+  '@matthesketh/utopia-content@0.7.4(sharp@0.33.5)':
     dependencies:
       gray-matter: 4.0.3
       rehype-highlight: 7.0.2
