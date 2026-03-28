@@ -37,7 +37,7 @@
 import { signal } from '@matthesketh/utopia-core'
 import { navigate } from '@matthesketh/utopia-router'
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
-import { authApi } from '@/api'
+import { authApi, isAuthed } from '@/api'
 
 const loading = signal(true)
 const isRegistered = signal(false)
@@ -64,6 +64,7 @@ async function handleRegister() {
     const options = await authApi.registerOptions(displayName())
     const attResp = await startRegistration({ optionsJSON: options })
     await authApi.register(attResp, options.user.id, displayName())
+    isAuthed.set(true)
     navigate('/posts')
   } catch (err) {
     error.set(err instanceof Error ? err.message : 'Registration failed')
@@ -80,6 +81,7 @@ async function handleLogin() {
     const { challengeKey, ...optionsJSON } = options
     const assertionResp = await startAuthentication({ optionsJSON })
     await authApi.login(assertionResp, challengeKey)
+    isAuthed.set(true)
     navigate('/posts')
   } catch (err) {
     error.set(err instanceof Error ? err.message : 'Login failed')
