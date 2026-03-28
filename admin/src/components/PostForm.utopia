@@ -58,6 +58,7 @@
             <button class="toolbar-btn" @click="insertMarkdown('[', '](url)')" title="Link">Link</button>
             <button class="toolbar-btn" @click="insertLine('> ')" title="Quote">"</button>
             <button class="toolbar-btn" @click="insertLine('- ')" title="List">-</button>
+            <button class="toolbar-btn" @click="insertTable()" title="Insert table">Table</button>
           </div>
           <textarea
             class="editor-textarea"
@@ -244,6 +245,28 @@ function insertCodeBlock() {
   const selected = ta.value.substring(start, end)
   const block = '```\n' + selected + '\n```'
   ta.setRangeText(block, start, end, 'end')
+  body.set(ta.value)
+  ta.focus()
+}
+
+function insertTable() {
+  const input = prompt('Table size (cols x rows)', '3x3')
+  if (!input) return
+  const match = input.match(/(\d+)\s*[x×,]\s*(\d+)/)
+  if (!match) return
+  const cols = Math.min(parseInt(match[1], 10), 10)
+  const rows = Math.min(parseInt(match[2], 10), 20)
+  if (cols < 1 || rows < 1) return
+
+  const header = '| ' + Array.from({ length: cols }, (_, i) => `Header ${i + 1}`).join(' | ') + ' |'
+  const divider = '| ' + Array.from({ length: cols }, () => '---').join(' | ') + ' |'
+  const row = '| ' + Array.from({ length: cols }, () => '   ').join(' | ') + ' |'
+  const table = '\n' + header + '\n' + divider + '\n' + Array.from({ length: rows }, () => row).join('\n') + '\n'
+
+  const ta = getTextarea()
+  if (!ta) return
+  const pos = ta.selectionStart
+  ta.setRangeText(table, pos, pos, 'end')
   body.set(ta.value)
   ta.focus()
 }
