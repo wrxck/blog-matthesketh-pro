@@ -45,7 +45,7 @@
 
 <script>
 import { signal, computed } from '@matthesketh/utopia-core'
-import { postsApi } from '../../api'
+import { postsApi } from '@/api'
 
 const posts = signal([])
 const loading = signal(true)

@@ -37,7 +37,7 @@
 import { signal } from '@matthesketh/utopia-core'
 import { navigate } from '@matthesketh/utopia-router'
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
-import { authApi } from '../api'
+import { authApi } from '@/api'
 
 const loading = signal(true)
 const isRegistered = signal(false)

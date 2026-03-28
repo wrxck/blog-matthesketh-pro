@@ -13,8 +13,8 @@
 import { signal, computed } from '@matthesketh/utopia-core'
 import { currentRoute } from '@matthesketh/utopia-router'
 import { useHead } from '@matthesketh/utopia-runtime'
-import PostForm from '../../../components/PostForm.utopia'
-import { postsApi } from '../../../api'
+import PostForm from '@/components/PostForm.utopia'
+import { postsApi } from '@/api'
 
 const loading = signal(true)
 const error = signal('')
