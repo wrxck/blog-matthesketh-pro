@@ -31,8 +31,17 @@ if (isDark()) {
   document.documentElement.setAttribute('data-theme', 'dark')
 }
 
-// Check auth status on load
-authApi.status().then((s) => isAuthed.set(s.authenticated)).catch(() => {})
+// Check auth status on load — redirect to login if not authenticated
+authApi.status().then((s) => {
+  isAuthed.set(s.authenticated)
+  if (!s.authenticated && window.location.pathname !== '/') {
+    navigate('/')
+  }
+}).catch(() => {
+  if (window.location.pathname !== '/') {
+    navigate('/')
+  }
+})
 
 function toggleTheme() {
   const next = !isDark()
