@@ -143,7 +143,7 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
 
       const { credential } = verification.registrationInfo
       await credentialStore.saveCredential({
-        credentialId: Buffer.from(credential.id).toString('base64url'),
+        credentialId: credential.id,
         publicKey: Buffer.from(credential.publicKey).toString('base64url'),
         counter: credential.counter,
         transports: response.response.transports || [],
@@ -193,6 +193,13 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
     const credentialId = response.id
     const storedCred = await credentialStore.getCredentialById(credentialId)
     if (!storedCred) {
+      // Log for debugging credential ID mismatches
+      const allCreds = await credentialStore.getCredentials()
+      app.log.warn({
+        msg: 'Unknown credential',
+        receivedId: credentialId,
+        storedIds: allCreds.map((c) => c.credentialId),
+      })
       return reply.code(400).send({ error: 'Unknown credential' })
     }
 
