@@ -118,6 +118,11 @@ if (isEditing && editId) {
     tags.set(post.tags.join(', '))
     body.set(post.body)
     loading.set(false)
+    // Textarea :value binding doesn't update reactively — set via DOM
+    requestAnimationFrame(() => {
+      const ta = document.querySelector('.editor-textarea')
+      if (ta) ta.value = post.body
+    })
   }).catch((err) => {
     formError.set(err instanceof Error ? err.message : 'Failed to load post')
     loading.set(false)
