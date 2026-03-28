@@ -21,7 +21,7 @@
     <div class="posts-list" u-if="!loading() && !error()">
       <a
         u-for="post in filteredPosts()"
-        :href="'/posts/' + post.slug"
+        :href="'/posts/' + post.id"
         class="post-row"
       >
         <div class="post-info">
