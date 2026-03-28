@@ -56,8 +56,8 @@ COPY public/ ./blog/public/
 COPY content/ ./blog/content/
 COPY index.html vite.config.ts tsconfig.json ./blog/
 
-# Data directory for credentials
-RUN mkdir -p data
+# Data directory for credentials (writable by node user)
+RUN mkdir -p data && chown node:node data
 
 ENV NODE_ENV=production
 ENV PORT=60612
