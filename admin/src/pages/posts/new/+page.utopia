@@ -1,0 +1,10 @@
+<template>
+  <PostForm />
+</template>
+
+<script>
+import { useHead } from '@matthesketh/utopia-runtime'
+import PostForm from '../../../components/PostForm.utopia'
+
+useHead({ title: 'New Post — Admin' })
+</script>

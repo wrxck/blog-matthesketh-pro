@@ -1,0 +1,59 @@
+<template>
+  <div u-if="loading()">
+    <p class="loading-text">Loading post...</p>
+  </div>
+  <div u-if="error()">
+    <p class="error-text">{{ error() }}</p>
+    <a href="/admin/posts" class="back-link">&larr; Back to posts</a>
+  </div>
+  <PostForm u-if="post()" :isEditing="true" :initialData="post()" />
+</template>
+
+<script>
+import { signal, computed } from '@matthesketh/utopia-core'
+import { currentRoute } from '@matthesketh/utopia-router'
+import { useHead } from '@matthesketh/utopia-runtime'
+import PostForm from '../../../../components/PostForm.utopia'
+import { postsApi } from '../../../../api'
+
+const loading = signal(true)
+const error = signal('')
+const post = signal(null)
+
+const slug = computed(() => {
+  const route = currentRoute()
+  return route ? route.params.slug : ''
+})
+
+// Fetch post data
+const currentSlug = slug()
+if (currentSlug) {
+  postsApi.get(currentSlug).then((data) => {
+    post.set(data)
+    useHead({ title: `Edit: ${data.title} — Admin` })
+    loading.set(false)
+  }).catch((err) => {
+    error.set(err.message)
+    loading.set(false)
+  })
+} else {
+  error.set('No slug provided')
+  loading.set(false)
+}
+</script>
+
+<style scoped>
+.loading-text {
+  color: var(--color-text-muted);
+}
+.error-text {
+  color: #c00;
+  margin-bottom: 1rem;
+}
+.back-link {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+}
+</style>
