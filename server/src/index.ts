@@ -4,6 +4,7 @@ import fastifyCookie from '@fastify/cookie'
 import { config } from './config.js'
 import { PostsService } from './posts.js'
 import { requireAuth } from './session.js'
+import { CredentialStore, registerAuthRoutes } from './auth.js'
 
 const app = Fastify({ logger: true })
 
@@ -24,6 +25,9 @@ await app.register(fastifyStatic, {
 })
 
 const posts = new PostsService(config.contentDir)
+
+const credentialStore = new CredentialStore(config.dataDir)
+registerAuthRoutes(app, credentialStore)
 
 // --- Post API routes ---
 
