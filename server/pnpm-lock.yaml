@@ -20,6 +20,9 @@ importers:
       '@simplewebauthn/server':
         specifier: ^11.0.0
         version: 11.0.0
+      '@simplewebauthn/types':
+        specifier: ^12.0.0
+        version: 12.0.0
       fastify:
         specifier: ^5.0.0
         version: 5.8.4
@@ -410,6 +413,10 @@ packages:
 
   '@simplewebauthn/types@11.0.0':
     resolution: {integrity: sha512-b2o0wC5u2rWts31dTgBkAtSNKGX0cvL6h8QedNsKmj8O4QoLFQFR3DBVBUlpyVEhYKA+mXGUaXbcOc4JdQ3HzA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+  '@simplewebauthn/types@12.0.0':
+    resolution: {integrity: sha512-q6y8MkoV8V8jB4zzp18Uyj2I7oFp2/ONL8c3j8uT06AOWu3cIChc1au71QYHrP2b+xDapkGTiv+9lX7xkTlAsA==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@types/chai@5.2.3':
@@ -1285,6 +1292,8 @@ snapshots:
       - encoding
 
   '@simplewebauthn/types@11.0.0': {}
+
+  '@simplewebauthn/types@12.0.0': {}
 
   '@types/chai@5.2.3':
     dependencies:

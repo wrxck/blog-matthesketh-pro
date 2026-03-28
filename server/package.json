@@ -10,17 +10,18 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "fastify": "^5.0.0",
-    "@fastify/static": "^8.0.0",
     "@fastify/cookie": "^11.0.0",
     "@fastify/cors": "^10.0.0",
+    "@fastify/static": "^8.0.0",
     "@simplewebauthn/server": "^11.0.0",
+    "@simplewebauthn/types": "^12.0.0",
+    "fastify": "^5.0.0",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
-    "@types/node": "^22.0.0"
+    "vitest": "^3.0.0"
   }
 }
