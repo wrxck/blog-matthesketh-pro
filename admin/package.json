@@ -1,0 +1,32 @@
+{
+  "name": "blog-admin",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "utopia dev --port 5174",
+    "build": "utopia build",
+    "preview": "utopia preview"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-markdown": "^6.0.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/language-data": "^6.0.0",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/theme-one-dark": "^6.0.0",
+    "@codemirror/view": "^6.40.0",
+    "@matthesketh/utopia-core": "^0.7.0",
+    "@matthesketh/utopia-router": "^0.7.7",
+    "@matthesketh/utopia-runtime": "^0.7.2",
+    "@simplewebauthn/browser": "^11.0.0",
+    "codemirror": "^6.0.0",
+    "marked": "^15.0.0"
+  },
+  "devDependencies": {
+    "@matthesketh/utopia-cli": "^0.7.3",
+    "@matthesketh/utopia-vite-plugin": "^0.7.2",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}

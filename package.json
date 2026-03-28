@@ -10,7 +10,7 @@
     "preview": "utopia preview"
   },
   "dependencies": {
-    "@matthesketh/utopia-content": "^0.7.2",
+    "@matthesketh/utopia-content": "^0.7.4",
     "@matthesketh/utopia-core": "^0.7.0",
     "@matthesketh/utopia-router": "^0.7.7",
     "@matthesketh/utopia-runtime": "^0.7.2"
@@ -26,9 +26,6 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp"
-    ],
-    "overrides": {
-      "@matthesketh/utopia-content": "link:../utopiajs/packages/content"
-    }
+    ]
   }
 }

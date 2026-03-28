@@ -1,0 +1,200 @@
+<template>
+  <div class="posts-page">
+    <div class="page-header">
+      <h1 class="page-title">POSTS</h1>
+      <a href="/posts/new" class="new-btn">+ New Post</a>
+    </div>
+
+    <div class="search-container">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="search posts..."
+        :value="query()"
+        @input="(e) => query.set(e.target.value)"
+      />
+    </div>
+
+    <p class="loading-text" u-if="loading()">Loading posts...</p>
+    <p class="error-text" u-if="error()">{{ error() }}</p>
+
+    <div class="posts-list" u-if="!loading() && !error()">
+      <a
+        u-for="post in filteredPosts()"
+        :href="'/posts/' + post.slug"
+        class="post-row"
+      >
+        <div class="post-info">
+          <span class="post-title">{{ post.title || '(untitled)' }}</span>
+          <span class="post-date">{{ formatDate(post.date) }}</span>
+        </div>
+        <div class="post-meta-row">
+          <span :class="'status-pill ' + (post.draft ? 'draft' : 'published')">
+            {{ post.draft ? 'DRAFT' : 'PUBLISHED' }}
+          </span>
+          <span class="post-tags-inline" u-if="post.tags.length > 0">
+            {{ post.tags.join(', ') }}
+          </span>
+        </div>
+      </a>
+
+      <p class="no-results" u-if="filteredPosts().length === 0">No posts found.</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import { signal, computed } from '@matthesketh/utopia-core'
+import { postsApi } from '@/api'
+
+const posts = signal([])
+const loading = signal(true)
+const error = signal('')
+const query = signal('')
+
+postsApi.list().then((data) => {
+  posts.set(data)
+  loading.set(false)
+}).catch((err) => {
+  error.set(err.message)
+  loading.set(false)
+})
+
+const filteredPosts = computed(() => {
+  const q = query().toLowerCase().trim()
+  const all = posts()
+  if (!q) return all
+  return all.filter(
+    (p) =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.tags.some((t) => t.toLowerCase().includes(q))
+  )
+})
+
+function formatDate(date) {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+</script>
+
+<style scoped>
+.posts-page {
+  max-width: 800px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.new-btn {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: var(--color-text);
+}
+.new-btn:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.search-container {
+  margin-bottom: 2rem;
+}
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+}
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.post-row {
+  display: block;
+  text-decoration: none;
+  color: var(--color-text);
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+}
+.post-row:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+.post-row:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.post-row:hover .post-date,
+.post-row:hover .post-tags-inline,
+.post-row:hover .status-pill {
+  color: var(--color-bg);
+}
+.post-row:hover .status-pill {
+  border-color: var(--color-bg);
+}
+.post-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+.post-title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+.post-date {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+.status-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--color-border);
+}
+.status-pill.draft {
+  color: var(--color-text-muted);
+}
+.status-pill.published {
+  color: var(--color-text);
+}
+.post-tags-inline {
+  color: var(--color-text-muted);
+}
+.no-results {
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 1rem;
+}
+.loading-text, .error-text {
+  color: var(--color-text-muted);
+}
+.error-text {
+  color: #c00;
+}
+</style>

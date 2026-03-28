@@ -1,20 +1,79 @@
-FROM node:20-alpine AS builder
+# --- Stage 1: Build blog static output ---
+FROM node:20-alpine AS blog-builder
 WORKDIR /app
+RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
-COPY . .
+RUN pnpm install --frozen-lockfile
+COPY src/ ./src/
+COPY public/ ./public/
+COPY content/ ./content/
+COPY index.html vite.config.ts tsconfig.json ./
 RUN pnpm build
 
-FROM nginx:alpine
-RUN apk add --no-cache curl && \
-    mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp \
-             /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp \
-             /var/cache/nginx/scgi_temp && \
-    chown -R nginx:nginx /var/cache/nginx /run /var/log/nginx /etc/nginx/conf.d
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 60612
-USER nginx
+# --- Stage 2: Build admin SPA ---
+FROM node:20-alpine AS admin-builder
+WORKDIR /app
+RUN corepack enable
+COPY admin/package.json admin/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY admin/src/ ./src/
+COPY admin/index.html admin/vite.config.ts admin/tsconfig.json ./
+RUN pnpm build
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:60612/ || exit 1
+# --- Stage 3: Build server ---
+FROM node:20-alpine AS server-builder
+WORKDIR /app
+RUN corepack enable
+COPY server/package.json server/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY server/src/ ./src/
+COPY server/tsconfig.json ./
+RUN pnpm build
+
+# --- Stage 4: Runtime ---
+FROM node:20-alpine
+WORKDIR /app
+RUN corepack enable
+
+# Server runtime deps
+COPY server/package.json server/pnpm-lock.yaml ./server/
+RUN cd server && pnpm install --frozen-lockfile --prod
+
+# Server compiled output
+COPY --from=server-builder /app/dist ./server/dist/
+
+# Blog static output (initial build, may be overwritten by volume)
+COPY --from=blog-builder /app/dist ./dist/
+
+# Admin static output
+COPY --from=admin-builder /app/dist ./dist-admin/
+
+# Blog source + deps for in-container rebuilds
+COPY package.json pnpm-lock.yaml ./blog/
+RUN cd blog && pnpm install --frozen-lockfile
+COPY src/ ./blog/src/
+COPY public/ ./blog/public/
+COPY content/ ./blog/content/
+COPY index.html vite.config.ts tsconfig.json ./blog/
+
+# Data directory for credentials (writable by node user)
+RUN mkdir -p data && chown node:node data
+
+ENV NODE_ENV=production
+ENV PORT=60612
+ENV DIST_DIR=/app/dist
+ENV DIST_ADMIN_DIR=/app/dist-admin
+ENV CONTENT_DIR=/app/blog/content
+ENV DATA_DIR=/app/data
+ENV BLOG_DIR=/app/blog
+ENV ADMIN_HOST=admin.matthesketh.pro
+ENV RP_ID=matthesketh.pro
+ENV ORIGIN=https://admin.matthesketh.pro
+
+EXPOSE 60612
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:60612/ || exit 1
+
+USER node
+CMD ["node", "server/dist/index.js"]

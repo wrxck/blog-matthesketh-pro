@@ -1,0 +1,132 @@
+<template>
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="header-inner">
+        <a :href="isAuthed() ? '/posts' : '/'" class="site-name">Matt Hesketh <span class="admin-badge">ADMIN</span></a>
+        <nav class="admin-nav">
+          <a href="https://blog.matthesketh.pro" class="nav-link" target="_blank">View Blog</a>
+          <button class="nav-link theme-toggle" @click="toggleTheme">
+            {{ isDark() ? 'light' : 'dark' }}
+          </button>
+          <button class="nav-link" @click="handleLogout" u-if="isAuthed()">Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <RouterView />
+    </main>
+  </div>
+</template>
+
+<script>
+import { signal } from '@matthesketh/utopia-core'
+import { createRouterView as RouterView, navigate } from '@matthesketh/utopia-router'
+import { authApi, isAuthed } from './api'
+const isDark = signal(localStorage.getItem('theme') === 'dark')
+
+if (isDark()) {
+  document.documentElement.setAttribute('data-theme', 'dark')
+}
+
+// Check auth status on load — redirect to login if not authenticated
+authApi.status().then((s) => {
+  isAuthed.set(s.authenticated)
+  if (!s.authenticated && window.location.pathname !== '/') {
+    navigate('/')
+  }
+}).catch(() => {
+  if (window.location.pathname !== '/') {
+    navigate('/')
+  }
+})
+
+function toggleTheme() {
+  const next = !isDark()
+  isDark.set(next)
+  document.documentElement.setAttribute('data-theme', next ? 'dark' : '')
+  localStorage.setItem('theme', next ? 'dark' : 'light')
+}
+
+async function handleLogout() {
+  await authApi.logout()
+  isAuthed.set(false)
+  navigate('/')
+}
+</script>
+
+<style scoped>
+.admin-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.admin-header {
+  border-bottom: 1px solid var(--color-border);
+}
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.site-name {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.site-name:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.admin-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--color-border);
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  letter-spacing: 2px;
+}
+.site-name:hover .admin-badge {
+  border-color: var(--color-bg);
+}
+.admin-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.nav-link {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.nav-link:hover {
+  border-bottom: 1px solid var(--color-border);
+}
+.theme-toggle {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--color-border) !important;
+}
+.theme-toggle:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.admin-main {
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+</style>

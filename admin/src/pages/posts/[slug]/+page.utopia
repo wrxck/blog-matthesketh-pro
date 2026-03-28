@@ -1,0 +1,14 @@
+<template>
+  <PostForm :isEditing="true" :editSlug="currentSlug" />
+</template>
+
+<script>
+import { currentRoute } from '@matthesketh/utopia-router'
+import PostForm from '@/components/PostForm.utopia'
+
+// Extract slug from route or URL
+const route = currentRoute()
+const currentSlug = (route && route.params && route.params.slug)
+  ? route.params.slug
+  : window.location.pathname.split('/').pop() || ''
+</script>

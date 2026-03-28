@@ -1,0 +1,7 @@
+<template>
+  <PostForm />
+</template>
+
+<script>
+import PostForm from '@/components/PostForm.utopia'
+</script>

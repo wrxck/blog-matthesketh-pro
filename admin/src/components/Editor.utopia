@@ -1,0 +1,187 @@
+<template>
+  <div class="editor-wrapper">
+    <div class="editor-toolbar">
+      <button class="toolbar-btn" @click="insertMarkdown('**', '**')" title="Bold">B</button>
+      <button class="toolbar-btn" @click="insertMarkdown('*', '*')" title="Italic"><em>I</em></button>
+      <button class="toolbar-btn" @click="insertLine('## ')" title="H2">H2</button>
+      <button class="toolbar-btn" @click="insertLine('### ')" title="H3">H3</button>
+      <button class="toolbar-btn" @click="insertMarkdown('`', '`')" title="Inline code">&lt;/&gt;</button>
+      <button class="toolbar-btn" @click="insertCodeBlock()" title="Code block">```</button>
+      <button class="toolbar-btn" @click="insertMarkdown('[', '](url)')" title="Link">Link</button>
+      <button class="toolbar-btn" @click="insertLine('> ')" title="Blockquote">"</button>
+      <button class="toolbar-btn" @click="insertLine('- ')" title="List">-</button>
+      <button class="toolbar-btn" @click="insertLine('1. ')" title="Ordered list">1.</button>
+      <button class="toolbar-btn" @click="insertLine('---')" title="Horizontal rule">---</button>
+    </div>
+    <div class="editor-container"></div>
+  </div>
+</template>
+
+<script>
+import { onMount, onDestroy } from '@matthesketh/utopia-runtime'
+import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view'
+import { EditorState } from '@codemirror/state'
+import { markdown } from '@codemirror/lang-markdown'
+import { languages } from '@codemirror/language-data'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { bracketMatching } from '@codemirror/language'
+
+// Props received from parent: initialValue (string), onChange (fn)
+export let initialValue = ''
+export let onChange = (_value) => {}
+
+let view = null
+
+const blogTheme = EditorView.theme({
+  '&': {
+    fontFamily: "'DM Mono', monospace",
+    fontSize: '14px',
+    lineHeight: '1.6',
+    backgroundColor: 'var(--color-bg)',
+    color: 'var(--color-text)',
+    height: '100%',
+  },
+  '.cm-content': {
+    padding: '1rem',
+    caretColor: 'var(--color-text)',
+    fontFamily: "'DM Mono', monospace",
+  },
+  '.cm-cursor': {
+    borderLeftColor: 'var(--color-text)',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'transparent',
+  },
+  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'var(--color-text)',
+    color: 'var(--color-bg)',
+  },
+  '.cm-gutters': {
+    backgroundColor: 'var(--color-bg)',
+    color: 'var(--color-text-muted)',
+    border: 'none',
+    borderRight: '1px solid var(--color-border)',
+    fontFamily: "'DM Mono', monospace",
+  },
+  '.cm-scroller': {
+    overflow: 'auto',
+  },
+  '&.cm-focused': {
+    outline: 'none',
+  },
+}, { dark: false })
+
+function initEditor() {
+  // Find the container by class within this component's DOM
+  const containers = document.querySelectorAll('.editor-container')
+  const container = containers[containers.length - 1]
+  if (!container || container.querySelector('.cm-editor')) return
+
+  const updateListener = EditorView.updateListener.of((update) => {
+    if (update.docChanged) {
+      onChange(update.state.doc.toString())
+    }
+  })
+
+  view = new EditorView({
+    state: EditorState.create({
+      doc: initialValue,
+      extensions: [
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        history(),
+        bracketMatching(),
+        markdown({ codeLanguages: languages }),
+        blogTheme,
+        updateListener,
+        cmPlaceholder('Start writing...'),
+        EditorView.lineWrapping,
+      ],
+    }),
+    parent: container,
+  })
+}
+
+onMount(() => {
+  // Delay to ensure DOM is fully rendered
+  requestAnimationFrame(() => {
+    initEditor()
+    // Retry once more if it didn't work (conditional rendering delay)
+    if (!view) {
+      setTimeout(initEditor, 100)
+    }
+  })
+})
+
+onDestroy(() => {
+  if (view) {
+    view.destroy()
+    view = null
+  }
+})
+
+function insertMarkdown(before, after) {
+  if (!view) return
+  const { from, to } = view.state.selection.main
+  const selected = view.state.sliceDoc(from, to)
+  view.dispatch({
+    changes: { from, to, insert: before + selected + after },
+    selection: { anchor: from + before.length, head: from + before.length + selected.length },
+  })
+  view.focus()
+}
+
+function insertLine(prefix) {
+  if (!view) return
+  const { from } = view.state.selection.main
+  const line = view.state.doc.lineAt(from)
+  view.dispatch({
+    changes: { from: line.from, to: line.from, insert: prefix },
+  })
+  view.focus()
+}
+
+function insertCodeBlock() {
+  if (!view) return
+  const { from, to } = view.state.selection.main
+  const selected = view.state.sliceDoc(from, to)
+  const block = '```\n' + selected + '\n```'
+  view.dispatch({
+    changes: { from, to, insert: block },
+    selection: { anchor: from + 4 },
+  })
+  view.focus()
+}
+</script>
+
+<style scoped>
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--color-border);
+}
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.25rem;
+}
+.toolbar-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.toolbar-btn:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.editor-container {
+  flex: 1;
+  overflow: auto;
+}
+</style>
