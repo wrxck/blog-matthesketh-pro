@@ -67,12 +67,15 @@ import { postsApi } from '@/api'
 export let isEditing = false
 export let initialData = null // { slug, title, description, date, tags, draft, body }
 
-const title = signal(initialData?.title || '')
-const slug = signal(initialData?.slug || '')
-const description = signal(initialData?.description || '')
-const date = signal(initialData?.date || new Date().toISOString().split('T')[0])
-const tags = signal(initialData?.tags?.join(', ') || '')
-const body = signal(initialData?.body || '')
+// Unwrap initialData in case it's passed as a reactive value
+const data = typeof initialData === 'function' ? initialData() : initialData
+
+const title = signal(data?.title || '')
+const slug = signal(data?.slug || '')
+const description = signal(data?.description || '')
+const date = signal(data?.date || new Date().toISOString().split('T')[0])
+const tags = signal(data?.tags?.join(', ') || '')
+const body = signal(data?.body || '')
 const saving = signal(false)
 const formError = signal('')
 const formSuccess = signal('')
