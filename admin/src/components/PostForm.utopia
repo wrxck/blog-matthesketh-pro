@@ -1,0 +1,253 @@
+<template>
+  <div class="post-form">
+    <div class="form-header">
+      <a href="/admin/posts" class="back-link">&larr; Posts</a>
+      <div class="form-actions">
+        <button class="action-btn" @click="handleSaveDraft" :disabled="saving()">
+          {{ saving() ? 'Saving...' : 'Save Draft' }}
+        </button>
+        <button class="action-btn publish-btn" @click="handlePublish" :disabled="saving()">
+          {{ saving() ? 'Publishing...' : 'Publish' }}
+        </button>
+        <button class="action-btn delete-btn" @click="handleDelete" u-if="isEditing" :disabled="saving()">
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <p class="form-error" u-if="formError()">{{ formError() }}</p>
+    <p class="form-success" u-if="formSuccess()">{{ formSuccess() }}</p>
+
+    <div class="meta-fields">
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Title</label>
+          <input type="text" :value="title()" @input="(e) => title.set(e.target.value)" placeholder="Post title" />
+        </div>
+        <div class="field field-sm">
+          <label class="field-label">Slug</label>
+          <input type="text" :value="slug()" @input="(e) => slug.set(e.target.value)" placeholder="post-slug" :disabled="isEditing" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Description</label>
+        <input type="text" :value="description()" @input="(e) => description.set(e.target.value)" placeholder="Short description" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Tags</label>
+          <input type="text" :value="tags()" @input="(e) => tags.set(e.target.value)" placeholder="tag1, tag2, tag3" />
+        </div>
+        <div class="field field-sm">
+          <label class="field-label">Date</label>
+          <input type="date" :value="date()" @input="(e) => date.set(e.target.value)" />
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-split">
+      <div class="editor-pane">
+        <Editor :initialValue="body()" :onChange="onBodyChange" />
+      </div>
+      <div class="preview-pane">
+        <Preview :markdown="body" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { signal } from '@matthesketh/utopia-core'
+import { navigate } from '@matthesketh/utopia-router'
+import Editor from './Editor.utopia'
+import Preview from './Preview.utopia'
+import { postsApi } from '../api'
+
+// Props from parent
+export let isEditing = false
+export let initialData = null // { slug, title, description, date, tags, draft, body }
+
+const title = signal(initialData?.title || '')
+const slug = signal(initialData?.slug || '')
+const description = signal(initialData?.description || '')
+const date = signal(initialData?.date || new Date().toISOString().split('T')[0])
+const tags = signal(initialData?.tags?.join(', ') || '')
+const body = signal(initialData?.body || '')
+const saving = signal(false)
+const formError = signal('')
+const formSuccess = signal('')
+
+function onBodyChange(value) {
+  body.set(value)
+}
+
+function getPostData(draft) {
+  return {
+    slug: slug(),
+    title: title(),
+    description: description(),
+    date: date(),
+    tags: tags().split(',').map((t) => t.trim()).filter(Boolean),
+    draft,
+    body: body(),
+  }
+}
+
+async function handleSaveDraft() {
+  saving.set(true)
+  formError.set('')
+  formSuccess.set('')
+  try {
+    const data = getPostData(true)
+    if (isEditing) {
+      await postsApi.update(data.slug, data)
+    } else {
+      await postsApi.create(data)
+    }
+    formSuccess.set('Draft saved.')
+    if (!isEditing) {
+      navigate('/admin/posts/' + data.slug)
+    }
+  } catch (err) {
+    formError.set(err instanceof Error ? err.message : 'Save failed')
+  } finally {
+    saving.set(false)
+  }
+}
+
+async function handlePublish() {
+  saving.set(true)
+  formError.set('')
+  formSuccess.set('')
+  try {
+    const data = getPostData(false)
+    if (isEditing) {
+      await postsApi.update(data.slug, data)
+      await postsApi.publish(data.slug)
+    } else {
+      await postsApi.create(data)
+      await postsApi.publish(data.slug)
+    }
+    formSuccess.set('Published! Blog is rebuilding...')
+  } catch (err) {
+    formError.set(err instanceof Error ? err.message : 'Publish failed')
+  } finally {
+    saving.set(false)
+  }
+}
+
+async function handleDelete() {
+  if (!confirm('Delete this post? This cannot be undone.')) return
+  saving.set(true)
+  formError.set('')
+  try {
+    await postsApi.delete(slug())
+    navigate('/admin/posts')
+  } catch (err) {
+    formError.set(err instanceof Error ? err.message : 'Delete failed')
+    saving.set(false)
+  }
+}
+</script>
+
+<style scoped>
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: calc(100vh - 120px);
+}
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.back-link {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.back-link:hover {
+  border-bottom: 1px solid var(--color-border);
+}
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.action-btn {
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+}
+.publish-btn {
+  font-weight: 700;
+}
+.delete-btn {
+  color: #c00;
+  border-color: #c00;
+}
+.delete-btn:hover {
+  background: #c00;
+  color: #fff;
+}
+.form-error {
+  color: #c00;
+  font-size: 0.85rem;
+  margin: 0;
+}
+.form-success {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+.meta-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+}
+.field {
+  flex: 1;
+}
+.field-sm {
+  flex: 0 0 200px;
+}
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  color: var(--color-text-muted);
+}
+.editor-split {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+.editor-pane {
+  flex: 1;
+  min-width: 0;
+}
+.preview-pane {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .editor-split {
+    flex-direction: column;
+  }
+  .field-row {
+    flex-direction: column;
+  }
+  .field-sm {
+    flex: 1;
+  }
+}
+</style>

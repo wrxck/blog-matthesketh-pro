@@ -1,0 +1,141 @@
+<template>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">{{ isRegistered() ? 'LOGIN' : 'SETUP' }}</h1>
+
+      <div class="auth-status" u-if="loading()">
+        <p class="status-text">Checking...</p>
+      </div>
+
+      <div class="auth-form" u-if="!loading() && !isRegistered()">
+        <p class="auth-desc">No passkey registered. Set up your admin account.</p>
+        <input
+          type="text"
+          class="auth-input"
+          placeholder="display name (e.g. Matt)"
+          :value="displayName()"
+          @input="(e) => displayName.set(e.target.value)"
+        />
+        <button class="auth-btn" @click="handleRegister" :disabled="!displayName() || busy()">
+          {{ busy() ? 'Registering...' : 'Register Passkey' }}
+        </button>
+      </div>
+
+      <div class="auth-form" u-if="!loading() && isRegistered()">
+        <p class="auth-desc">Authenticate with your passkey to continue.</p>
+        <button class="auth-btn" @click="handleLogin" :disabled="busy()">
+          {{ busy() ? 'Authenticating...' : 'Login with Passkey' }}
+        </button>
+      </div>
+
+      <p class="auth-error" u-if="error()">{{ error() }}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import { signal } from '@matthesketh/utopia-core'
+import { navigate } from '@matthesketh/utopia-router'
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
+import { authApi } from '../api'
+
+const loading = signal(true)
+const isRegistered = signal(false)
+const displayName = signal('')
+const busy = signal(false)
+const error = signal('')
+
+// Check auth status on mount
+authApi.status().then((s) => {
+  isRegistered.set(s.registered)
+  if (s.authenticated) {
+    navigate('/admin/posts')
+  }
+  loading.set(false)
+}).catch((err) => {
+  error.set(err.message)
+  loading.set(false)
+})
+
+async function handleRegister() {
+  busy.set(true)
+  error.set('')
+  try {
+    const options = await authApi.registerOptions(displayName())
+    const attResp = await startRegistration({ optionsJSON: options })
+    await authApi.register(attResp, options.user.id, displayName())
+    navigate('/admin/posts')
+  } catch (err) {
+    error.set(err instanceof Error ? err.message : 'Registration failed')
+  } finally {
+    busy.set(false)
+  }
+}
+
+async function handleLogin() {
+  busy.set(true)
+  error.set('')
+  try {
+    const options = await authApi.loginOptions()
+    const { challengeKey, ...optionsJSON } = options
+    const assertionResp = await startAuthentication({ optionsJSON })
+    await authApi.login(assertionResp, challengeKey)
+    navigate('/admin/posts')
+  } catch (err) {
+    error.set(err instanceof Error ? err.message : 'Login failed')
+  } finally {
+    busy.set(false)
+  }
+}
+</script>
+
+<style scoped>
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid var(--color-border);
+  padding: 2.5rem;
+}
+.auth-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.auth-desc {
+  color: var(--color-text-muted);
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.auth-input {
+  padding: 0.75rem 1rem;
+}
+.auth-btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.auth-error {
+  color: #c00;
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+}
+.status-text {
+  color: var(--color-text-muted);
+}
+</style>

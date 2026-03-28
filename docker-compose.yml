@@ -5,6 +5,9 @@ services:
     container_name: blog-matthesketh-pro
     ports:
       - "127.0.0.1:60612:60612"
+    volumes:
+      - blog-data:/app/data
+      - blog-content:/app/blog/content
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -22,5 +25,9 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 128M
+          cpus: "0.50"
+          memory: 512M
+
+volumes:
+  blog-data:
+  blog-content:
