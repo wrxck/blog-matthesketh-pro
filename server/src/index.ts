@@ -1,37 +1,32 @@
 import Fastify from 'fastify'
 import fastifyStatic from '@fastify/static'
 import fastifyCookie from '@fastify/cookie'
+import fastifyCors from '@fastify/cors'
 import { config } from './config.js'
 import { PostsService } from './posts.js'
-import { requireAuth } from './session.js'
 import { CredentialStore, registerAuthRoutes } from './auth.js'
+import { requireAuth } from './session.js'
 import { triggerBuild, getBuildStatus } from './build.js'
 
 const app = Fastify({ logger: true })
 
+// --- Plugins ---
 await app.register(fastifyCookie)
-
-// Serve blog static files
-await app.register(fastifyStatic, {
-  root: config.distDir,
-  prefix: '/',
-  decorateReply: false,
+await app.register(fastifyCors, {
+  origin: process.env.NODE_ENV === 'production'
+    ? false
+    : ['http://localhost:5174', 'http://localhost:5173'],
+  credentials: true,
 })
 
-// Serve admin SPA
-await app.register(fastifyStatic, {
-  root: config.distAdminDir,
-  prefix: '/admin/',
-  decorateReply: false,
-})
-
+// --- Services ---
 const posts = new PostsService(config.contentDir)
-
 const credentialStore = new CredentialStore(config.dataDir)
+
+// --- Auth routes ---
 registerAuthRoutes(app, credentialStore)
 
-// --- Post API routes ---
-
+// --- Post CRUD routes ---
 app.get('/api/admin/posts', async (req, reply) => {
   if (!requireAuth(req, reply)) return
   return posts.list()
@@ -81,6 +76,7 @@ app.delete('/api/admin/posts/:slug', async (req, reply) => {
   }
 })
 
+// --- Publish + rebuild routes ---
 app.post('/api/admin/posts/:slug/publish', async (req, reply) => {
   if (!requireAuth(req, reply)) return
   const { slug } = req.params as { slug: string }
@@ -104,15 +100,28 @@ app.get('/api/admin/build/status', async (req, reply) => {
   return getBuildStatus()
 })
 
-// Admin SPA fallback — all /admin/* routes serve the admin index.html
+// --- Static file serving ---
+await app.register(fastifyStatic, {
+  root: config.distDir,
+  prefix: '/',
+  decorateReply: false,
+})
+
+await app.register(fastifyStatic, {
+  root: config.distAdminDir,
+  prefix: '/admin/',
+  decorateReply: false,
+})
+
+// --- SPA fallbacks ---
 app.setNotFoundHandler((req, reply) => {
   if (req.url.startsWith('/admin')) {
     return reply.sendFile('index.html', config.distAdminDir)
   }
-  // Blog SPA fallback
   return reply.sendFile('index.html', config.distDir)
 })
 
+// --- Start ---
 try {
   await app.listen({ port: config.port, host: config.host })
   console.log(`Server listening on ${config.host}:${config.port}`)
