@@ -7,6 +7,8 @@ import { PostsService } from './posts.js'
 import { CredentialStore, registerAuthRoutes } from './auth.js'
 import { requireAuth } from './session.js'
 import { triggerBuild, getBuildStatus } from './build.js'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 const app = Fastify({ logger: true })
 
@@ -14,7 +16,7 @@ const app = Fastify({ logger: true })
 await app.register(fastifyCookie)
 await app.register(fastifyCors, {
   origin: process.env.NODE_ENV === 'production'
-    ? false
+    ? [`https://${config.adminHost}`]
     : ['http://localhost:5174', 'http://localhost:5173'],
   credentials: true,
 })
@@ -104,20 +106,27 @@ app.get('/api/admin/build/status', async (req, reply) => {
 await app.register(fastifyStatic, {
   root: config.distDir,
   prefix: '/',
-  decorateReply: false,
+  decorateReply: true,
 })
 
-await app.register(fastifyStatic, {
-  root: config.distAdminDir,
-  prefix: '/admin/',
-  decorateReply: false,
-})
-
-// --- SPA fallbacks ---
-app.setNotFoundHandler((req, reply) => {
-  if (req.url.startsWith('/admin')) {
+// Host-based routing: serve admin assets for admin subdomain
+app.addHook('onRequest', async (req, reply) => {
+  if (req.hostname !== config.adminHost) return
+  if (req.url.startsWith('/api/')) return
+  const urlPath = req.url.split('?')[0]
+  if (urlPath === '/' || urlPath === '') {
     return reply.sendFile('index.html', config.distAdminDir)
   }
+  const filePath = join(config.distAdminDir, urlPath)
+  if (existsSync(filePath)) {
+    return reply.sendFile(urlPath, config.distAdminDir)
+  }
+  // SPA fallback for admin routes
+  return reply.sendFile('index.html', config.distAdminDir)
+})
+
+// --- Blog SPA fallback ---
+app.setNotFoundHandler((req, reply) => {
   return reply.sendFile('index.html', config.distDir)
 })
 

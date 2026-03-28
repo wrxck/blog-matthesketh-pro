@@ -49,7 +49,7 @@ const error = signal('')
 authApi.status().then((s) => {
   isRegistered.set(s.registered)
   if (s.authenticated) {
-    navigate('/admin/posts')
+    navigate('/posts')
   }
   loading.set(false)
 }).catch((err) => {
@@ -64,7 +64,7 @@ async function handleRegister() {
     const options = await authApi.registerOptions(displayName())
     const attResp = await startRegistration({ optionsJSON: options })
     await authApi.register(attResp, options.user.id, displayName())
-    navigate('/admin/posts')
+    navigate('/posts')
   } catch (err) {
     error.set(err instanceof Error ? err.message : 'Registration failed')
   } finally {
@@ -80,7 +80,7 @@ async function handleLogin() {
     const { challengeKey, ...optionsJSON } = options
     const assertionResp = await startAuthentication({ optionsJSON })
     await authApi.login(assertionResp, challengeKey)
-    navigate('/admin/posts')
+    navigate('/posts')
   } catch (err) {
     error.set(err instanceof Error ? err.message : 'Login failed')
   } finally {
