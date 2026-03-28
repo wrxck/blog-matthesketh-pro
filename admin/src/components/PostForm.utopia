@@ -1,7 +1,7 @@
 <template>
   <div class="post-form" u-if="!loading()">
     <div class="form-header">
-      <a href="/posts" class="back-link">&larr; Posts</a>
+      <a href="/posts" class="back-link" @click="(e) => { e.preventDefault(); window.location.href = '/posts' }">&larr; Posts</a>
       <div class="form-actions">
         <button class="action-btn" @click="handleSaveDraft" :disabled="saving()">
           {{ saving() ? 'Saving...' : 'Save Draft' }}
@@ -161,7 +161,7 @@ async function handleSaveDraft() {
     }
     formSuccess.set('Draft saved.')
     if (!isEditing) {
-      navigate('/posts')
+      window.location.href = '/posts'
     }
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Save failed')
@@ -197,7 +197,7 @@ async function handleDelete() {
   formError.set('')
   try {
     await postsApi.delete(postId())
-    navigate('/posts')
+    window.location.href = '/posts'
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Delete failed')
     saving.set(false)
