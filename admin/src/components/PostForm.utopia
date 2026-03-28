@@ -61,7 +61,7 @@ import { signal } from '@matthesketh/utopia-core'
 import { navigate } from '@matthesketh/utopia-router'
 import Editor from './Editor.utopia'
 import Preview from './Preview.utopia'
-import { postsApi } from '../api'
+import { postsApi } from '@/api'
 
 // Props from parent
 export let isEditing = false
