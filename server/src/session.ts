@@ -41,12 +41,13 @@ export class SessionStore {
 export const sessionStore = new SessionStore()
 
 export function setSessionCookie(reply: FastifyReply, token: string): void {
+  const isDev = process.env.NODE_ENV !== 'production'
   reply.setCookie(config.cookieName, token, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
+    secure: !isDev,
+    sameSite: isDev ? 'lax' : 'strict',
     path: '/',
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: 7 * 24 * 60 * 60,
   })
 }
 
