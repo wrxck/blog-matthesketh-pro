@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { signal, computed } from '@matthesketh/utopia-core'
+import { signal } from '@matthesketh/utopia-core'
 import { currentRoute } from '@matthesketh/utopia-router'
 import { useHead } from '@matthesketh/utopia-runtime'
 import PostForm from '@/components/PostForm.utopia'
@@ -20,13 +20,16 @@ const loading = signal(true)
 const error = signal('')
 const post = signal(null)
 
-const slug = computed(() => {
+// Extract slug from URL path directly as fallback
+function getSlug() {
   const route = currentRoute()
-  return route ? route.params.slug : ''
-})
+  if (route && route.params && route.params.slug) return route.params.slug
+  // Fallback: parse from window.location
+  const parts = window.location.pathname.split('/')
+  return parts[parts.length - 1] || ''
+}
 
-// Fetch post data
-const currentSlug = slug()
+const currentSlug = getSlug()
 if (currentSlug) {
   postsApi.get(currentSlug).then((data) => {
     post.set(data)

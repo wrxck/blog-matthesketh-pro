@@ -13,7 +13,7 @@
       <button class="toolbar-btn" @click="insertLine('1. ')" title="Ordered list">1.</button>
       <button class="toolbar-btn" @click="insertLine('---')" title="Horizontal rule">---</button>
     </div>
-    <div id="cm-editor" class="editor-container"></div>
+    <div class="editor-container"></div>
   </div>
 </template>
 
@@ -71,9 +71,11 @@ const blogTheme = EditorView.theme({
   },
 }, { dark: false })
 
-onMount(() => {
-  const container = document.getElementById('cm-editor')
-  if (!container) return
+function initEditor() {
+  // Find the container by class within this component's DOM
+  const containers = document.querySelectorAll('.editor-container')
+  const container = containers[containers.length - 1]
+  if (!container || container.querySelector('.cm-editor')) return
 
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
@@ -96,6 +98,17 @@ onMount(() => {
       ],
     }),
     parent: container,
+  })
+}
+
+onMount(() => {
+  // Delay to ensure DOM is fully rendered
+  requestAnimationFrame(() => {
+    initEditor()
+    // Retry once more if it didn't work (conditional rendering delay)
+    if (!view) {
+      setTimeout(initEditor, 100)
+    }
   })
 })
 
