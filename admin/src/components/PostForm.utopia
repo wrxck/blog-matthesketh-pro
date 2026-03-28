@@ -1,5 +1,5 @@
 <template>
-  <div class="post-form">
+  <div class="post-form" u-if="!loading()">
     <div class="form-header">
       <a href="/posts" class="back-link">&larr; Posts</a>
       <div class="form-actions">
@@ -47,42 +47,89 @@
 
     <div class="editor-split">
       <div class="editor-pane">
-        <Editor :initialValue="body()" :onChange="onBodyChange" />
+        <div class="editor-wrapper">
+          <div class="editor-toolbar">
+            <button class="toolbar-btn" @click="insertMarkdown('**', '**')" title="Bold">B</button>
+            <button class="toolbar-btn" @click="insertMarkdown('*', '*')" title="Italic"><em>I</em></button>
+            <button class="toolbar-btn" @click="insertLine('## ')" title="H2">H2</button>
+            <button class="toolbar-btn" @click="insertLine('### ')" title="H3">H3</button>
+            <button class="toolbar-btn" @click="insertMarkdown('`', '`')" title="Code">&lt;/&gt;</button>
+            <button class="toolbar-btn" @click="insertCodeBlock()" title="Code block">```</button>
+            <button class="toolbar-btn" @click="insertMarkdown('[', '](url)')" title="Link">Link</button>
+            <button class="toolbar-btn" @click="insertLine('> ')" title="Quote">"</button>
+            <button class="toolbar-btn" @click="insertLine('- ')" title="List">-</button>
+          </div>
+          <textarea
+            class="editor-textarea"
+            :value="body()"
+            @input="(e) => body.set(e.target.value)"
+            placeholder="Start writing markdown..."
+          ></textarea>
+        </div>
       </div>
       <div class="preview-pane">
-        <Preview :markdown="body" />
+        <div class="preview-wrapper">
+          <div class="preview-header">
+            <span class="preview-label">PREVIEW</span>
+          </div>
+          <div class="preview-content prose" u-html="previewHtml()"></div>
+        </div>
       </div>
     </div>
+  </div>
+  <div u-if="loading()" class="loading-container">
+    <p class="loading-text">Loading...</p>
   </div>
 </template>
 
 <script>
-import { signal } from '@matthesketh/utopia-core'
+import { signal, computed } from '@matthesketh/utopia-core'
 import { navigate } from '@matthesketh/utopia-router'
-import Editor from './Editor.utopia'
-import Preview from './Preview.utopia'
+import { marked } from 'marked'
 import { postsApi } from '@/api'
 
 // Props from parent
 export let isEditing = false
-export let initialData = null // { slug, title, description, date, tags, draft, body }
+export let editSlug = ''
 
-// Unwrap initialData in case it's passed as a reactive value
-const data = typeof initialData === 'function' ? initialData() : initialData
-
-const title = signal(data?.title || '')
-const slug = signal(data?.slug || '')
-const description = signal(data?.description || '')
-const date = signal(data?.date || new Date().toISOString().split('T')[0])
-const tags = signal(data?.tags?.join(', ') || '')
-const body = signal(data?.body || '')
+const loading = signal(!!isEditing)
+const title = signal('')
+const slug = signal('')
+const description = signal('')
+const date = signal(new Date().toISOString().split('T')[0])
+const tags = signal('')
+const body = signal('')
 const saving = signal(false)
 const formError = signal('')
 const formSuccess = signal('')
 
-function onBodyChange(value) {
-  body.set(value)
+// If editing, fetch post data directly
+if (isEditing && editSlug) {
+  postsApi.get(editSlug).then((post) => {
+    title.set(post.title)
+    slug.set(post.slug)
+    description.set(post.description)
+    date.set(post.date)
+    tags.set(post.tags.join(', '))
+    body.set(post.body)
+    loading.set(false)
+  }).catch((err) => {
+    formError.set(err instanceof Error ? err.message : 'Failed to load post')
+    loading.set(false)
+  })
 }
+
+// Live preview
+marked.setOptions({ gfm: true, breaks: false })
+const previewHtml = computed(() => {
+  const md = body()
+  if (!md) return '<p style="color: var(--color-text-muted); font-style: italic;">Start writing to see a preview...</p>'
+  try {
+    return marked.parse(md)
+  } catch {
+    return '<p style="color: #c00;">Preview error</p>'
+  }
+})
 
 function getPostData(draft) {
   return {
@@ -150,6 +197,45 @@ async function handleDelete() {
     formError.set(err instanceof Error ? err.message : 'Delete failed')
     saving.set(false)
   }
+}
+
+// Toolbar helpers — work with the textarea directly
+function getTextarea() {
+  return document.querySelector('.editor-textarea')
+}
+
+function insertMarkdown(before, after) {
+  const ta = getTextarea()
+  if (!ta) return
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const selected = ta.value.substring(start, end)
+  const replacement = before + selected + after
+  ta.setRangeText(replacement, start, end, 'select')
+  body.set(ta.value)
+  ta.focus()
+}
+
+function insertLine(prefix) {
+  const ta = getTextarea()
+  if (!ta) return
+  const start = ta.selectionStart
+  const lineStart = ta.value.lastIndexOf('\n', start - 1) + 1
+  ta.setRangeText(prefix, lineStart, lineStart, 'end')
+  body.set(ta.value)
+  ta.focus()
+}
+
+function insertCodeBlock() {
+  const ta = getTextarea()
+  if (!ta) return
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const selected = ta.value.substring(start, end)
+  const block = '```\n' + selected + '\n```'
+  ta.setRangeText(block, start, end, 'end')
+  body.set(ta.value)
+  ta.focus()
 }
 </script>
 
@@ -240,6 +326,80 @@ async function handleDelete() {
 .preview-pane {
   flex: 1;
   min-width: 0;
+}
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--color-border);
+}
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.25rem;
+}
+.toolbar-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.toolbar-btn:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+.editor-textarea {
+  flex: 1;
+  border: none;
+  resize: none;
+  padding: 1rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  width: 100%;
+  tab-size: 2;
+}
+.editor-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+.preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+.preview-header {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.preview-label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--color-text-muted);
+}
+.preview-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 4rem;
+}
+.loading-text {
+  color: var(--color-text-muted);
 }
 
 @media (max-width: 900px) {
