@@ -3,18 +3,22 @@ import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { PostsService } from './posts.js'
 
-const TEST_DIR = join(import.meta.dirname, '../.test-content/blog')
+const TEST_BASE = join(import.meta.dirname, '../.test-content')
+const TEST_DIR = join(TEST_BASE, 'blog')
+const TEST_DATA = join(import.meta.dirname, '../.test-data-posts')
 
 describe('PostsService', () => {
   let posts: PostsService
 
   beforeEach(() => {
     mkdirSync(TEST_DIR, { recursive: true })
-    posts = new PostsService(join(import.meta.dirname, '../.test-content'))
+    mkdirSync(TEST_DATA, { recursive: true })
+    posts = new PostsService(TEST_BASE, TEST_DATA)
   })
 
   afterEach(() => {
-    rmSync(join(import.meta.dirname, '../.test-content'), { recursive: true, force: true })
+    rmSync(TEST_BASE, { recursive: true, force: true })
+    rmSync(TEST_DATA, { recursive: true, force: true })
   })
 
   it('lists posts from markdown files', async () => {

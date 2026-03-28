@@ -90,9 +90,14 @@ import { postsApi } from '@/api'
 
 // Props from parent
 export let isEditing = false
-export let editSlug = ''
+export let editId = ''
+
+// Resolve editId: unwrap if reactive, fallback to URL
+const resolvedId = (typeof editId === 'function' ? editId() : editId)
+  || (isEditing ? window.location.pathname.split('/').pop() : '')
 
 const loading = signal(!!isEditing)
+const postId = signal(resolvedId || '')
 const title = signal('')
 const slug = signal('')
 const description = signal('')
@@ -104,8 +109,9 @@ const formError = signal('')
 const formSuccess = signal('')
 
 // If editing, fetch post data directly
-if (isEditing && editSlug) {
-  postsApi.get(editSlug).then((post) => {
+if (isEditing && resolvedId) {
+  postsApi.get(resolvedId).then((post) => {
+    postId.set(post.id)
     title.set(post.title)
     slug.set(post.slug)
     description.set(post.description)
@@ -150,13 +156,13 @@ async function handleSaveDraft() {
   try {
     const data = getPostData(true)
     if (isEditing) {
-      await postsApi.update(data.slug, data)
+      await postsApi.update(postId(), data)
     } else {
       await postsApi.create(data)
     }
     formSuccess.set('Draft saved.')
     if (!isEditing) {
-      navigate('/posts/' + data.slug)
+      navigate('/posts')
     }
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Save failed')
@@ -172,11 +178,11 @@ async function handlePublish() {
   try {
     const data = getPostData(false)
     if (isEditing) {
-      await postsApi.update(data.slug, data)
-      await postsApi.publish(data.slug)
+      await postsApi.update(postId(), data)
+      await postsApi.publish(postId())
     } else {
       await postsApi.create(data)
-      await postsApi.publish(data.slug)
+      // TODO: publish new post needs the returned ID
     }
     formSuccess.set('Published! Blog is rebuilding...')
   } catch (err) {
@@ -191,7 +197,7 @@ async function handleDelete() {
   saving.set(true)
   formError.set('')
   try {
-    await postsApi.delete(slug())
+    await postsApi.delete(postId())
     navigate('/posts')
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Delete failed')

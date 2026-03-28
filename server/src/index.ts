@@ -22,7 +22,7 @@ await app.register(fastifyCors, {
 })
 
 // --- Services ---
-const posts = new PostsService(config.contentDir)
+const posts = new PostsService(config.contentDir, config.dataDir)
 const credentialStore = new CredentialStore(config.dataDir)
 
 // --- Auth routes ---
@@ -34,9 +34,11 @@ app.get('/api/admin/posts', async (req, reply) => {
   return posts.list()
 })
 
-app.get('/api/admin/posts/:slug', async (req, reply) => {
+app.get('/api/admin/posts/:id', async (req, reply) => {
   if (!requireAuth(req, reply)) return
-  const { slug } = req.params as { slug: string }
+  const { id } = req.params as { id: string }
+  const slug = await posts.getSlugById(id)
+  if (!slug) return reply.code(404).send({ error: 'Post not found' })
   const post = await posts.get(slug)
   if (!post) return reply.code(404).send({ error: 'Post not found' })
   return post
@@ -56,9 +58,11 @@ app.post('/api/admin/posts', async (req, reply) => {
   }
 })
 
-app.put('/api/admin/posts/:slug', async (req, reply) => {
+app.put('/api/admin/posts/:id', async (req, reply) => {
   if (!requireAuth(req, reply)) return
-  const { slug } = req.params as { slug: string }
+  const { id } = req.params as { id: string }
+  const slug = await posts.getSlugById(id)
+  if (!slug) return reply.code(404).send({ error: 'Post not found' })
   try {
     await posts.update(slug, req.body as any)
     return { ok: true }
@@ -67,9 +71,11 @@ app.put('/api/admin/posts/:slug', async (req, reply) => {
   }
 })
 
-app.delete('/api/admin/posts/:slug', async (req, reply) => {
+app.delete('/api/admin/posts/:id', async (req, reply) => {
   if (!requireAuth(req, reply)) return
-  const { slug } = req.params as { slug: string }
+  const { id } = req.params as { id: string }
+  const slug = await posts.getSlugById(id)
+  if (!slug) return reply.code(404).send({ error: 'Post not found' })
   try {
     await posts.delete(slug)
     return { ok: true }
@@ -79,9 +85,11 @@ app.delete('/api/admin/posts/:slug', async (req, reply) => {
 })
 
 // --- Publish + rebuild routes ---
-app.post('/api/admin/posts/:slug/publish', async (req, reply) => {
+app.post('/api/admin/posts/:id/publish', async (req, reply) => {
   if (!requireAuth(req, reply)) return
-  const { slug } = req.params as { slug: string }
+  const { id } = req.params as { id: string }
+  const slug = await posts.getSlugById(id)
+  if (!slug) return reply.code(404).send({ error: 'Post not found' })
   try {
     await posts.update(slug, { draft: false })
     const buildResult = await triggerBuild()
