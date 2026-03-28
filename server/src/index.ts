@@ -112,7 +112,7 @@ await app.register(fastifyStatic, {
 // Host-based routing: serve admin assets for admin subdomain
 app.addHook('onRequest', async (req, reply) => {
   if (req.hostname !== config.adminHost) return
-  if (req.url.startsWith('/api/')) return
+  if (req.url.startsWith('/api/') || req.url.startsWith('/.well-known/')) return
   const urlPath = req.url.split('?')[0]
   if (urlPath === '/' || urlPath === '') {
     return reply.sendFile('index.html', config.distAdminDir)
