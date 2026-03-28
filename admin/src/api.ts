@@ -1,3 +1,8 @@
+import { signal } from '@matthesketh/utopia-core'
+
+// Shared auth state — updated by App.utopia and auth page
+export const isAuthed = signal(false)
+
 const API_BASE = import.meta.env.DEV
   ? 'http://localhost:60612/api/admin'
   : '/api/admin'
@@ -15,6 +20,11 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
     credentials: 'include',
   })
   if (!res.ok) {
+    if (res.status === 401 && window.location.pathname !== '/') {
+      isAuthed.set(false)
+      window.location.href = '/'
+      throw new Error('Not authenticated')
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error(err.error || res.statusText)
   }

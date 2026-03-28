@@ -2,7 +2,7 @@
   <div class="admin-container">
     <header class="admin-header">
       <div class="header-inner">
-        <a href="/posts" class="site-name">Matt Hesketh <span class="admin-badge">ADMIN</span></a>
+        <a :href="isAuthed() ? '/posts' : '/'" class="site-name">Matt Hesketh <span class="admin-badge">ADMIN</span></a>
         <nav class="admin-nav">
           <a href="https://blog.matthesketh.pro" class="nav-link" target="_blank">View Blog</a>
           <button class="nav-link theme-toggle" @click="toggleTheme">
@@ -22,9 +22,7 @@
 <script>
 import { signal } from '@matthesketh/utopia-core'
 import { createRouterView as RouterView, navigate } from '@matthesketh/utopia-router'
-import { authApi } from './api'
-
-const isAuthed = signal(false)
+import { authApi, isAuthed } from './api'
 const isDark = signal(localStorage.getItem('theme') === 'dark')
 
 if (isDark()) {
