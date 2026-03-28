@@ -2,7 +2,7 @@
   <div class="posts-page">
     <div class="page-header">
       <h1 class="page-title">POSTS</h1>
-      <a href="/admin/posts/new" class="new-btn">+ New Post</a>
+      <a href="/posts/new" class="new-btn">+ New Post</a>
     </div>
 
     <div class="search-container">
@@ -21,7 +21,7 @@
     <div class="posts-list" u-if="!loading() && !error()">
       <a
         u-for="post in filteredPosts()"
-        :href="'/admin/posts/' + post.slug"
+        :href="'/posts/' + post.slug"
         class="post-row"
       >
         <div class="post-info">

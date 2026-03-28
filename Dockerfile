@@ -66,6 +66,9 @@ ENV DIST_ADMIN_DIR=/app/dist-admin
 ENV CONTENT_DIR=/app/blog/content
 ENV DATA_DIR=/app/data
 ENV BLOG_DIR=/app/blog
+ENV ADMIN_HOST=admin.matthesketh.pro
+ENV RP_ID=matthesketh.pro
+ENV ORIGIN=https://admin.matthesketh.pro
 
 EXPOSE 60612
 

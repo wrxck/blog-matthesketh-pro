@@ -4,7 +4,7 @@
   </div>
   <div u-if="error()">
     <p class="error-text">{{ error() }}</p>
-    <a href="/admin/posts" class="back-link">&larr; Back to posts</a>
+    <a href="/posts" class="back-link">&larr; Back to posts</a>
   </div>
   <PostForm u-if="post()" :isEditing="true" :initialData="post()" />
 </template>

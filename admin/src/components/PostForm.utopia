@@ -1,7 +1,7 @@
 <template>
   <div class="post-form">
     <div class="form-header">
-      <a href="/admin/posts" class="back-link">&larr; Posts</a>
+      <a href="/posts" class="back-link">&larr; Posts</a>
       <div class="form-actions">
         <button class="action-btn" @click="handleSaveDraft" :disabled="saving()">
           {{ saving() ? 'Saving...' : 'Save Draft' }}
@@ -106,7 +106,7 @@ async function handleSaveDraft() {
     }
     formSuccess.set('Draft saved.')
     if (!isEditing) {
-      navigate('/admin/posts/' + data.slug)
+      navigate('/posts/' + data.slug)
     }
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Save failed')
@@ -142,7 +142,7 @@ async function handleDelete() {
   formError.set('')
   try {
     await postsApi.delete(slug())
-    navigate('/admin/posts')
+    navigate('/posts')
   } catch (err) {
     formError.set(err instanceof Error ? err.message : 'Delete failed')
     saving.set(false)
