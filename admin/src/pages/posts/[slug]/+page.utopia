@@ -1,14 +1,7 @@
 <template>
-  <PostForm :isEditing="true" :editId="currentId" />
+  <PostForm />
 </template>
 
 <script>
-import { currentRoute } from '@matthesketh/utopia-router'
 import PostForm from '@/components/PostForm.utopia'
-
-// Extract post ID from route or URL
-const route = currentRoute()
-const currentId = (route && route.params && route.params.slug)
-  ? route.params.slug
-  : window.location.pathname.split('/').pop() || ''
 </script>
