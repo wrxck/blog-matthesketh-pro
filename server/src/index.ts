@@ -5,6 +5,7 @@ import { config } from './config.js'
 import { PostsService } from './posts.js'
 import { requireAuth } from './session.js'
 import { CredentialStore, registerAuthRoutes } from './auth.js'
+import { triggerBuild, getBuildStatus } from './build.js'
 
 const app = Fastify({ logger: true })
 
@@ -78,6 +79,29 @@ app.delete('/api/admin/posts/:slug', async (req, reply) => {
   } catch (err: any) {
     return reply.code(400).send({ error: err.message })
   }
+})
+
+app.post('/api/admin/posts/:slug/publish', async (req, reply) => {
+  if (!requireAuth(req, reply)) return
+  const { slug } = req.params as { slug: string }
+  try {
+    await posts.update(slug, { draft: false })
+    const buildResult = await triggerBuild()
+    return { ok: true, build: buildResult }
+  } catch (err: any) {
+    return reply.code(400).send({ error: err.message })
+  }
+})
+
+app.post('/api/admin/posts/rebuild', async (req, reply) => {
+  if (!requireAuth(req, reply)) return
+  const buildResult = await triggerBuild()
+  return { ok: true, build: buildResult }
+})
+
+app.get('/api/admin/build/status', async (req, reply) => {
+  if (!requireAuth(req, reply)) return
+  return getBuildStatus()
 })
 
 // Admin SPA fallback — all /admin/* routes serve the admin index.html
