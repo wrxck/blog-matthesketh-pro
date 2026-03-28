@@ -10,7 +10,7 @@ import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON,
   AuthenticatorTransportFuture,
-} from '@simplewebauthn/server'
+} from '@simplewebauthn/types'
 import type { FastifyInstance } from 'fastify'
 import { config } from './config.js'
 import { sessionStore, setSessionCookie, clearSessionCookie, requireAuth } from './session.js'
@@ -169,8 +169,7 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
       rpID: config.rpId,
       userVerification: 'required',
       allowCredentials: creds.map((c) => ({
-        id: Buffer.from(c.credentialId, 'base64url'),
-        type: 'public-key' as const,
+        id: c.credentialId,
         transports: c.transports as AuthenticatorTransportFuture[],
       })),
     })
@@ -204,7 +203,7 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
         expectedOrigin: config.origin,
         expectedRPID: config.rpId,
         credential: {
-          id: Buffer.from(storedCred.credentialId, 'base64url'),
+          id: storedCred.credentialId,
           publicKey: Buffer.from(storedCred.publicKey, 'base64url'),
           counter: storedCred.counter,
           transports: storedCred.transports as AuthenticatorTransportFuture[],
