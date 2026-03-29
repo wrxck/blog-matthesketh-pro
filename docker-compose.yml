@@ -8,6 +8,10 @@ services:
     volumes:
       - blog-data:/app/data
       - blog-content:/app/blog/content
+    environment:
+      - ADMIN_HOST=admin.yourdomain.com
+      - RP_ID=yourdomain.com
+      - ORIGIN=https://admin.yourdomain.com
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

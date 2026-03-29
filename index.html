@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Matt Hesketh — Blog</title>
-  <meta name="description" content="Matt Hesketh — Software engineering, mainframes, and building things.">
+  <title>{{name}} — {{title}}</title>
+  <meta name="description" content="{{name}} — {{description}}">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="canonical" href="https://blog.matthesketh.pro/">
-  <meta property="og:title" content="Matt Hesketh — Blog">
-  <meta property="og:description" content="Software engineering, mainframes, and building things.">
+  <meta name="theme-color" content="{{themeColor}}">
+  <link rel="canonical" href="{{url}}/">
+  <meta property="og:title" content="{{name}} — {{title}}">
+  <meta property="og:description" content="{{description}}">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://blog.matthesketh.pro/">
-  <meta property="og:locale" content="en_GB">
+  <meta property="og:url" content="{{url}}/">
+  <meta property="og:locale" content="{{locale}}">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Matt Hesketh — Blog">
-  <meta name="twitter:description" content="Software engineering, mainframes, and building things.">
+  <meta name="twitter:title" content="{{name}} — {{title}}">
+  <meta name="twitter:description" content="{{description}}">
   <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/feed.xml">
   <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -29,13 +29,13 @@
   {
     "@context": "https://schema.org",
     "@type": "Blog",
-    "name": "Matt Hesketh",
-    "description": "Software engineering, mainframes, and building things.",
-    "url": "https://blog.matthesketh.pro",
+    "name": "{{name}}",
+    "description": "{{description}}",
+    "url": "{{url}}",
     "author": {
       "@type": "Person",
-      "name": "Matt Hesketh",
-      "url": "https://matthesketh.pro"
+      "name": "{{author.name}}",
+      "url": "{{author.url}}"
     }
   }
   </script>
@@ -43,7 +43,7 @@
 <body>
   <div id="app"></div>
   <noscript>
-    <p>Matt Hesketh — Blog. Enable JavaScript to view.</p>
+    <p>{{name}} — {{title}}. Enable JavaScript to view.</p>
   </noscript>
   <script type="module" src="/src/main.ts"></script>
 </body>
