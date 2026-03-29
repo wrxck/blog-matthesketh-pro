@@ -1,8 +1,8 @@
 {
-  "name": "blog-matthesketh-pro",
+  "name": "blog-with-admin",
   "private": true,
   "version": "0.0.1",
-  "description": "Matt Hesketh's Blog",
+  "description": "Config-driven blog with admin panel built with UtopiaJS",
   "type": "module",
   "scripts": {
     "dev": "utopia dev",

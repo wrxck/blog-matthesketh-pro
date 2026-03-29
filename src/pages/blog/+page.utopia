@@ -63,6 +63,7 @@
 import { signal, computed } from '@matthesketh/utopia-core'
 import { currentRoute } from '@matthesketh/utopia-router'
 import { getCollection } from '@matthesketh/utopia-content'
+import { config } from '../../../site.config'
 import '../../content.config'
 
 const allPosts = await getCollection('blog')
@@ -104,7 +105,7 @@ const copied = signal(false)
 function shareUrl(platform) {
   const p = post()
   if (!p) return '#'
-  const url = encodeURIComponent('https://blog.matthesketh.pro/blog/' + p.slug)
+  const url = encodeURIComponent(config.url + '/blog/' + p.slug)
   const title = encodeURIComponent(p.data.title)
   if (platform === 'x') return 'https://x.com/intent/tweet?url=' + url + '&text=' + title
   if (platform === 'threads') return 'https://www.threads.net/intent/post?text=' + title + ' ' + url
@@ -115,7 +116,7 @@ function shareUrl(platform) {
 function copyLink() {
   const p = post()
   if (!p) return
-  navigator.clipboard.writeText('https://blog.matthesketh.pro/blog/' + p.slug)
+  navigator.clipboard.writeText(config.url + '/blog/' + p.slug)
   copied(true)
   setTimeout(() => copied(false), 2000)
 }
