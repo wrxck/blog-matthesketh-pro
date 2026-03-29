@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-admin/
 .cache/
+.claude/
 *.tsbuildinfo
 .DS_Store
 .env
