@@ -133,4 +133,4 @@ Run `pnpm build` to regenerate the static site.
 ## Related Templates
 
 - [Personal Landing Page](https://github.com/wrxck/matthesketh-pro) — Minimal config-driven landing page
-- [Terminal CV](https://github.com/wrxck/cv-matthesketh-pro) — Config-driven CV with terminal design and PDF export
+- [CV / Resume](https://github.com/wrxck/cv-matthesketh-pro) — Config-driven CV with two-column layout and PDF export
