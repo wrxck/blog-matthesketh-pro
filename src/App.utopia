@@ -2,12 +2,12 @@
   <div class="app-container">
     <header class="site-header">
       <div class="header-inner">
-        <a href="/" class="site-name">Matt Hesketh</a>
+        <a href="/" class="site-name">{{ config.name }}</a>
         <nav class="site-nav" aria-label="Main navigation">
           <a href="/" class="nav-link">Blog</a>
           <a href="/tags" class="nav-link">Tags</a>
-          <a href="https://cv.matthesketh.pro" class="nav-link" target="_blank" rel="noopener noreferrer">CV</a>
-          <a href="https://github.com/wrxck" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a :href="config.nav.cv" class="nav-link" target="_blank" rel="noopener noreferrer">CV</a>
+          <a :href="config.nav.github" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a>
           <button class="nav-link theme-toggle" @click="toggleTheme">
             {{ isDark() ? 'light' : 'dark' }}
           </button>
@@ -21,7 +21,7 @@
 
     <footer class="site-footer">
       <div class="footer-inner">
-        <span>&copy; {{ currentYear }} Matt Hesketh</span>
+        <span>&copy; {{ currentYear }} {{ config.name }}</span>
         <nav class="footer-links">
           <a href="/feed.xml" class="footer-link">RSS</a>
           <a href="/atom.xml" class="footer-link">Atom</a>
@@ -33,6 +33,7 @@
 
 <script>
 import { signal } from '@matthesketh/utopia-core'
+import { config } from '../site.config'
 import { createRouterView as RouterView } from '@matthesketh/utopia-router'
 
 const currentYear = new Date().getFullYear()
