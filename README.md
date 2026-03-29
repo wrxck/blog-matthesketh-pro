@@ -1,5 +1,12 @@
 # Blog with Admin Panel
 
+![UtopiaJS](https://img.shields.io/badge/UtopiaJS-framework-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-purple?logo=vite&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-server-black?logo=fastify&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A config-driven blog with a built-in admin panel for writing and publishing posts. Built with [UtopiaJS](https://github.com/wrxck/utopiajs), Fastify, and Vite.
 
 ## Features
@@ -12,16 +19,18 @@ A config-driven blog with a built-in admin panel for writing and publishing post
 
 ## Quick Start
 
-1. Clone this repo
-2. Edit `site.config.ts` with your details
-3. Install and build:
-
 ```bash
+# 1. Use this template on GitHub (or clone)
+git clone https://github.com/wrxck/blog-matthesketh-pro.git my-blog
+cd my-blog
+
+# 2. Edit site.config.ts with your details
+# 3. Install and build
 pnpm install
 pnpm build
 ```
 
-The build will fail if `site.config.ts` still contains placeholder values.
+The build will fail if `site.config.ts` still contains placeholder values — you'll see clear error messages telling you what to change.
 
 ## Configuration
 
@@ -120,3 +129,8 @@ Your markdown content here.
 ```
 
 Run `pnpm build` to regenerate the static site.
+
+## Related Templates
+
+- [Personal Landing Page](https://github.com/wrxck/matthesketh-pro) — Minimal config-driven landing page
+- [Terminal CV](https://github.com/wrxck/cv-matthesketh-pro) — Config-driven CV with terminal design and PDF export
