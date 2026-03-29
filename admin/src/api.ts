@@ -45,6 +45,7 @@ export const authApi = {
 }
 
 export interface PostSummary {
+  id: string
   slug: string
   title: string
   description: string
@@ -59,14 +60,14 @@ export interface PostFull extends PostSummary {
 
 export const postsApi = {
   list: () => api<PostSummary[]>('/posts'),
-  get: (slug: string) => api<PostFull>(`/posts/${slug}`),
+  get: (id: string) => api<PostFull>(`/posts/${id}`),
   create: (data: { slug: string; title: string; description: string; date: string; tags: string[]; draft: boolean; body: string }) =>
     api<{ ok: true; slug: string }>('/posts', { method: 'POST', body: data }),
-  update: (slug: string, data: Partial<PostFull>) =>
-    api(`/posts/${slug}`, { method: 'PUT', body: data }),
-  delete: (slug: string) =>
-    api(`/posts/${slug}`, { method: 'DELETE' }),
-  publish: (slug: string) =>
-    api(`/posts/${slug}/publish`, { method: 'POST' }),
+  update: (id: string, data: Partial<PostFull>) =>
+    api(`/posts/${id}`, { method: 'PUT', body: data }),
+  delete: (id: string) =>
+    api(`/posts/${id}`, { method: 'DELETE' }),
+  publish: (id: string) =>
+    api(`/posts/${id}/publish`, { method: 'POST' }),
   rebuild: () => api('/posts/rebuild', { method: 'POST' }),
 }

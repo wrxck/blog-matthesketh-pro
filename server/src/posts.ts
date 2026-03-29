@@ -1,8 +1,10 @@
 import { readdir, readFile, writeFile, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
+import { randomUUID } from 'node:crypto'
 import matter from 'gray-matter'
 
 export interface PostSummary {
+  id: string
   slug: string
   title: string
   description: string
@@ -42,11 +44,53 @@ function validateSlug(slug: string): void {
   }
 }
 
+// UUID <-> slug index
+interface PostIndex {
+  [uuid: string]: string // uuid -> slug
+}
+
 export class PostsService {
   private blogDir: string
+  private indexPath: string
+  private index: PostIndex | null = null
 
-  constructor(contentDir: string) {
+  constructor(contentDir: string, dataDir: string) {
     this.blogDir = join(contentDir, 'blog')
+    this.indexPath = join(dataDir, 'post-index.json')
+  }
+
+  private async loadIndex(): Promise<PostIndex> {
+    if (this.index !== null) return this.index
+    try {
+      const raw = await readFile(this.indexPath, 'utf-8')
+      this.index = JSON.parse(raw)
+      return this.index!
+    } catch {
+      this.index = {}
+      return this.index
+    }
+  }
+
+  private async saveIndex(): Promise<void> {
+    await writeFile(this.indexPath, JSON.stringify(this.index, null, 2), 'utf-8')
+  }
+
+  private async getIdForSlug(slug: string): Promise<string> {
+    const index = await this.loadIndex()
+    // Find existing UUID for this slug
+    for (const [uuid, s] of Object.entries(index)) {
+      if (s === slug) return uuid
+    }
+    // Create new UUID mapping
+    const uuid = randomUUID()
+    index[uuid] = slug
+    await this.saveIndex()
+    return uuid
+  }
+
+  async getSlugById(id: string): Promise<string | null> {
+    const index = await this.loadIndex()
+    return index[id] || null
   }
 
   async list(): Promise<PostSummary[]> {
@@ -57,8 +101,11 @@ export class PostsService {
     for (const file of mdFiles) {
       const raw = await readFile(join(this.blogDir, file), 'utf-8')
       const { data } = matter(raw)
+      const slug = file.replace(/\.md$/, '')
+      const id = await this.getIdForSlug(slug)
       posts.push({
-        slug: file.replace(/\.md$/, ''),
+        id,
+        slug,
         title: data.title || '',
         description: data.description || '',
         date: data.date ? String(data.date instanceof Date ? data.date.toISOString().split('T')[0] : data.date) : '',
@@ -81,7 +128,9 @@ export class PostsService {
       return null
     }
     const { data, content } = matter(raw)
+    const id = await this.getIdForSlug(slug)
     return {
+      id,
       slug,
       title: data.title || '',
       description: data.description || '',
