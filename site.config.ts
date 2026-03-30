@@ -1,28 +1,28 @@
 export const config = {
   // Meta (used in index.html)
-  name: 'Your Name',
-  title: 'Your Blog Title',
-  description: 'What your blog is about.',
+  name: 'Matt Hesketh',
+  title: 'Matt Hesketh — Blog',
+  description: 'Software engineering, infrastructure, and web development.',
   locale: 'en_GB',
   themeColor: '#ffffff',
-  url: 'https://blog.yourdomain.com',
+  url: 'https://blog.matthesketh.pro',
 
   // Author info (structured data and feeds)
   author: {
-    name: 'Your Name',
-    url: 'https://yourdomain.com',
+    name: 'Matt Hesketh',
+    url: 'https://matthesketh.pro',
   },
 
   // Navigation links in header/footer
   nav: {
-    cv: 'https://cv.yourdomain.com',
-    github: 'https://github.com/yourusername',
+    cv: 'https://cv.matthesketh.pro',
+    github: 'https://github.com/wrxck',
   },
 
   // Admin panel config (for WebAuthn authentication)
   admin: {
-    hostname: 'admin.yourdomain.com',
-    rpId: 'yourdomain.com',
-    origin: 'https://admin.yourdomain.com',
+    hostname: 'admin.matthesketh.pro',
+    rpId: 'matthesketh.pro',
+    origin: 'https://admin.matthesketh.pro',
   },
 }
