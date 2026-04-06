@@ -5,8 +5,9 @@ import fastifyCors from '@fastify/cors'
 import { config } from './config.js'
 import { PostsService } from './posts.js'
 import { CredentialStore, registerAuthRoutes } from './auth.js'
-import { requireAuth } from './session.js'
+import { requireAuth, initSessionStore } from './session.js'
 import { triggerBuild, getBuildStatus } from './build.js'
+import { db, SESSION_MIGRATION, POSTS_MIGRATION } from './db.js'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -22,20 +23,25 @@ await app.register(fastifyCors, {
 })
 
 // --- Services ---
-const posts = new PostsService(config.contentDir, config.dataDir)
+const posts = new PostsService(db)
 const credentialStore = new CredentialStore(config.dataDir)
 
-// --- Auth routes ---
+// --- db + session init ---
+await db.connect()
+await db.migrate([SESSION_MIGRATION, POSTS_MIGRATION])
+initSessionStore(db)
+
+// --- auth routes ---
 registerAuthRoutes(app, credentialStore)
 
 // --- Post CRUD routes ---
 app.get('/api/admin/posts', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   return posts.list()
 })
 
 app.get('/api/admin/posts/:id', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   const { id } = req.params as { id: string }
   const slug = await posts.getSlugById(id)
   if (!slug) return reply.code(404).send({ error: 'Post not found' })
@@ -45,7 +51,7 @@ app.get('/api/admin/posts/:id', async (req, reply) => {
 })
 
 app.post('/api/admin/posts', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   const body = req.body as {
     slug: string; title: string; description: string
     date: string; tags: string[]; draft: boolean; body: string
@@ -59,7 +65,7 @@ app.post('/api/admin/posts', async (req, reply) => {
 })
 
 app.put('/api/admin/posts/:id', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   const { id } = req.params as { id: string }
   const slug = await posts.getSlugById(id)
   if (!slug) return reply.code(404).send({ error: 'Post not found' })
@@ -72,7 +78,7 @@ app.put('/api/admin/posts/:id', async (req, reply) => {
 })
 
 app.delete('/api/admin/posts/:id', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   const { id } = req.params as { id: string }
   const slug = await posts.getSlugById(id)
   if (!slug) return reply.code(404).send({ error: 'Post not found' })
@@ -86,13 +92,13 @@ app.delete('/api/admin/posts/:id', async (req, reply) => {
 
 // --- Publish + rebuild routes ---
 app.post('/api/admin/posts/:id/publish', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   const { id } = req.params as { id: string }
   const slug = await posts.getSlugById(id)
   if (!slug) return reply.code(404).send({ error: 'Post not found' })
   try {
     await posts.update(slug, { draft: false })
-    const buildResult = await triggerBuild()
+    const buildResult = await triggerBuild(posts)
     return { ok: true, build: buildResult }
   } catch (err: any) {
     return reply.code(400).send({ error: err.message })
@@ -100,13 +106,29 @@ app.post('/api/admin/posts/:id/publish', async (req, reply) => {
 })
 
 app.post('/api/admin/posts/rebuild', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
-  const buildResult = await triggerBuild()
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
+  const buildResult = await triggerBuild(posts)
   return { ok: true, build: buildResult }
 })
 
+// --- Public API endpoints (no auth required) ---
+app.get('/api/posts', async (_req, reply) => {
+  const allPosts = await posts.list()
+  // Only return published (non-draft) posts for public API
+  const publishedPosts = allPosts.filter((p) => !p.draft)
+  return publishedPosts
+})
+
+app.get('/api/posts/:slug', async (req, reply) => {
+  const { slug } = req.params as { slug: string }
+  const post = await posts.get(slug)
+  if (!post) return reply.code(404).send({ error: 'Post not found' })
+  if (post.draft) return reply.code(404).send({ error: 'Post not found' })
+  return post
+})
+
 app.get('/api/admin/build/status', async (req, reply) => {
-  if (!requireAuth(req, reply)) return
+  if (!(await requireAuth(req, reply))) return reply.code(401).send({ error: 'Unauthorized' })
   return getBuildStatus()
 })
 
@@ -138,13 +160,19 @@ app.setNotFoundHandler((req, reply) => {
   return reply.sendFile('index.html', config.distDir)
 })
 
-// --- Start ---
+// --- start ---
 try {
   await app.listen({ port: config.port, host: config.host })
-  console.log(`Server listening on ${config.host}:${config.port}`)
+  app.log.info(`server listening on ${config.host}:${config.port}`)
 } catch (err) {
   app.log.error(err)
   process.exit(1)
 }
+
+setInterval(() => {
+  import('./session.js').then(({ sessionStore }) => {
+    sessionStore.cleanup().catch((err: unknown) => app.log.error(err, 'session cleanup failed'))
+  })
+}, 60 * 60 * 1000)
 
 export { app }
