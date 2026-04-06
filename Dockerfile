@@ -7,17 +7,19 @@ RUN pnpm install --frozen-lockfile
 COPY src/ ./src/
 COPY public/ ./public/
 COPY content/ ./content/
-COPY index.html vite.config.ts tsconfig.json ./
+COPY scripts/ ./scripts/
+COPY index.html vite.config.ts tsconfig.json site.config.ts vite-plugin-html-config.ts ./
 RUN pnpm build
 
 # --- Stage 2: Build admin SPA ---
 FROM node:20-alpine AS admin-builder
-WORKDIR /app
+WORKDIR /app/admin
 RUN corepack enable
 COPY admin/package.json admin/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY admin/src/ ./src/
 COPY admin/index.html admin/vite.config.ts admin/tsconfig.json ./
+COPY vite-plugin-html-config.ts site.config.ts ../
 RUN pnpm build
 
 # --- Stage 3: Build server ---
@@ -46,7 +48,7 @@ COPY --from=server-builder /app/dist ./server/dist/
 COPY --from=blog-builder /app/dist ./dist/
 
 # Admin static output
-COPY --from=admin-builder /app/dist ./dist-admin/
+COPY --from=admin-builder /app/admin/dist ./dist-admin/
 
 # Blog source + deps for in-container rebuilds
 COPY package.json pnpm-lock.yaml ./blog/
@@ -54,7 +56,8 @@ RUN cd blog && pnpm install --frozen-lockfile
 COPY src/ ./blog/src/
 COPY public/ ./blog/public/
 COPY content/ ./blog/content/
-COPY index.html vite.config.ts tsconfig.json ./blog/
+COPY scripts/ ./blog/scripts/
+COPY index.html vite.config.ts tsconfig.json site.config.ts vite-plugin-html-config.ts ./blog/
 
 # Data directory for credentials (writable by node user)
 RUN mkdir -p data && chown node:node data
