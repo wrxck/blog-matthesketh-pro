@@ -12,6 +12,14 @@ services:
       - ADMIN_HOST=admin.matthesketh.pro
       - RP_ID=matthesketh.pro
       - ORIGIN=https://admin.matthesketh.pro
+      - DB_HOST=shared-postgres
+      - DB_PORT=5432
+      - DB_NAME=blog_admin
+      - DB_USER=blog_admin
+      - DB_PASSWORD=6+Z6BqWnYbn1LtQYYCLPz+kHTGGR1YKsyzVguCdtN5c=
+    networks:
+      - default
+      - databases
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -35,3 +43,7 @@ services:
 volumes:
   blog-data:
   blog-content:
+
+networks:
+  databases:
+    external: true
