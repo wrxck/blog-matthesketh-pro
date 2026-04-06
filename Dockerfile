@@ -34,6 +34,7 @@ RUN pnpm build
 
 # --- Stage 4: Runtime ---
 FROM node:20-alpine
+RUN apk add --no-cache su-exec
 WORKDIR /app
 RUN corepack enable
 
@@ -78,5 +79,7 @@ EXPOSE 60612
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:60612/ || exit 1
 
-USER node
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "server/dist/index.js"]
