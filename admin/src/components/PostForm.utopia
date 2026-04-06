@@ -108,6 +108,37 @@ const saving = signal(false)
 const formError = signal('')
 const formSuccess = signal('')
 
+// check for recovered draft from session expiry
+const DRAFT_KEY = 'blog_admin_draft_recovery'
+
+try {
+  const saved = localStorage.getItem(DRAFT_KEY)
+  if (saved) {
+    const draft = JSON.parse(saved)
+    const isRecent = Date.now() - draft.savedAt < 24 * 60 * 60 * 1000
+    const pathMatches = draft.path === window.location.pathname || (!isEditing && draft.path.includes('/new'))
+
+    if (isRecent && pathMatches) {
+      if (draft.title) title.set(draft.title)
+      if (draft.slug && !isEditing) slug.set(draft.slug)
+      if (draft.description) description.set(draft.description)
+      if (draft.tags) tags.set(draft.tags)
+      if (draft.date) date.set(draft.date)
+      if (draft.body) {
+        body.set(draft.body)
+        requestAnimationFrame(() => {
+          const ta = document.querySelector('.editor-textarea')
+          if (ta) ta.value = draft.body
+        })
+      }
+      formSuccess.set('Draft recovered from your previous session.')
+    }
+    localStorage.removeItem(DRAFT_KEY)
+  }
+} catch (e) {
+  localStorage.removeItem(DRAFT_KEY)
+}
+
 // If editing, fetch post data
 if (isEditing && editId) {
   postsApi.get(editId).then((post) => {

@@ -21,6 +21,25 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
   })
   if (!res.ok) {
     if (res.status === 401 && window.location.pathname !== '/') {
+      // stash current form state before redirect so user doesn't lose their draft
+      try {
+        const form = document.querySelector('.post-form')
+        if (form) {
+          const draft = {
+            path: window.location.pathname,
+            title: (document.querySelector('input[placeholder="Post title"]') as HTMLInputElement)?.value || '',
+            slug: (document.querySelector('input[placeholder="post-slug"]') as HTMLInputElement)?.value || '',
+            description: (document.querySelector('input[placeholder="Short description"]') as HTMLInputElement)?.value || '',
+            tags: (document.querySelector('input[placeholder="tag1, tag2, tag3"]') as HTMLInputElement)?.value || '',
+            date: (document.querySelector('input[type="date"]') as HTMLInputElement)?.value || '',
+            body: (document.querySelector('.editor-textarea') as HTMLTextAreaElement)?.value || '',
+            savedAt: Date.now(),
+          }
+          if (draft.title || draft.body) {
+            localStorage.setItem('blog_admin_draft_recovery', JSON.stringify(draft))
+          }
+        }
+      } catch {}
       isAuthed.set(false)
       window.location.href = '/'
       throw new Error('Not authenticated')

@@ -84,15 +84,15 @@ export class CredentialStore {
 const challenges = new Map<string, string>()
 
 export function registerAuthRoutes(app: FastifyInstance, credentialStore: CredentialStore): void {
-  // --- Auth status ---
+  // --- auth status ---
   app.get('/api/admin/auth/status', async (req) => {
     const registered = await credentialStore.isRegistered()
     const token = req.cookies[config.cookieName]
-    const authenticated = token ? sessionStore.get(token) !== null : false
+    const authenticated = token ? (await sessionStore.get(token)) !== null : false
     return { registered, authenticated }
   })
 
-  // --- Registration ---
+  // --- registration ---
   app.post('/api/admin/auth/register-options', async (req, reply) => {
     if (await credentialStore.isRegistered()) {
       return reply.code(403).send({ error: 'Already registered' })
@@ -151,15 +151,16 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
         displayName,
       })
 
-      const token = sessionStore.create(userId)
+      const token = await sessionStore.create(userId)
       setSessionCookie(reply, token)
       return { ok: true }
-    } catch (err: any) {
-      return reply.code(400).send({ error: err.message })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return reply.code(400).send({ error: message })
     }
   })
 
-  // --- Authentication ---
+  // --- authentication ---
   app.post('/api/admin/auth/login-options', async (req, reply) => {
     const creds = await credentialStore.getCredentials()
     if (creds.length === 0) {
@@ -226,17 +227,18 @@ export function registerAuthRoutes(app: FastifyInstance, credentialStore: Creden
         verification.authenticationInfo.newCounter
       )
 
-      const token = sessionStore.create(storedCred.userId)
+      const token = await sessionStore.create(storedCred.userId)
       setSessionCookie(reply, token)
       return { ok: true }
-    } catch (err: any) {
-      return reply.code(400).send({ error: err.message })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return reply.code(400).send({ error: message })
     }
   })
 
-  // --- Logout ---
+  // --- logout ---
   app.post('/api/admin/auth/logout', async (req, reply) => {
-    const session = requireAuth(req, reply)
+    const session = await requireAuth(req, reply)
     if (!session) return
     sessionStore.destroy(session.token)
     clearSessionCookie(reply)
