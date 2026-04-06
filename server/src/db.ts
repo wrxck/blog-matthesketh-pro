@@ -22,19 +22,3 @@ export const SESSION_MIGRATION = {
   down: 'DROP TABLE IF EXISTS sessions',
 }
 
-export const POSTS_MIGRATION = {
-  name: '002_create_posts',
-  up: `CREATE TABLE IF NOT EXISTS posts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    date DATE NOT NULL,
-    tags TEXT[] NOT NULL DEFAULT '{}',
-    draft BOOLEAN NOT NULL DEFAULT true,
-    body TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-  )`,
-  down: 'DROP TABLE IF EXISTS posts',
-}
