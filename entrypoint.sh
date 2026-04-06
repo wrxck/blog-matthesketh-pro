@@ -6,9 +6,8 @@ set -e
 chown -R node:node /app/blog/content
 chown -R node:node /app/data
 
-# vite writes temp files during build
-mkdir -p /app/blog/node_modules/.vite-temp
-chown -R node:node /app/blog/node_modules/.vite-temp
+# vite writes temp config files next to vite.config.ts during build
+chown node:node /app/blog
 
 # drop to node user and exec the server
 exec su-exec node "$@"
