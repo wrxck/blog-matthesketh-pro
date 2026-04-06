@@ -127,7 +127,7 @@ try {
       if (draft.body) {
         body.set(draft.body)
         requestAnimationFrame(() => {
-          const ta = document.querySelector('.editor-textarea') as HTMLTextAreaElement
+          const ta = document.querySelector('.editor-textarea')
           if (ta) ta.value = draft.body
         })
       }
@@ -135,7 +135,7 @@ try {
     }
     localStorage.removeItem(DRAFT_KEY)
   }
-} catch {
+} catch (e) {
   localStorage.removeItem(DRAFT_KEY)
 }
 
