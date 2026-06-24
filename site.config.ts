@@ -26,10 +26,11 @@ export const config = {
     origin: 'https://admin.matthesketh.pro',
   },
 
-  // tech-relevant display ads (ethicalads). the publisher id is public — it ships
+  // tech display ads (google adsense). the client + slot are public — they ship
   // in the client bundle. empty means no ads render (the integration is dormant).
   ads: {
-    ethicalPublisher: '',
+    adsenseClient: '', // 'ca-pub-…' from your adsense account
+    adsenseSlot: '', // a display ad-unit id created in adsense
   },
 
   // "go ad-free" subscription. price is display-only copy for the /adfree page;

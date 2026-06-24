@@ -33,7 +33,7 @@
 
       <aside class="ad-slot" u-if="showAds()">
         <span class="ad-slot-label">Sponsored · keeps the blog free</span>
-        <div class="ea-ad" :data-ea-publisher="adPublisher" data-ea-type="image" :data-ea-keywords="adKeywords()"></div>
+        <ins class="adsbygoogle ad-ins" style="display: block" :data-ad-client="adClient" :data-ad-slot="adSlot" data-ad-format="auto" data-full-width-responsive="true"></ins>
         <a class="ad-slot-remove" href="/adfree">Remove ads — for the price of a coffee →</a>
       </aside>
 
@@ -107,12 +107,12 @@ const relatedPosts = computed(() => {
     .slice(0, 3)
 })
 
-// ad-free gating: hide the ad slot for subscribers, and only load the ethicalads
-// script when an ad is actually shown. keywords come from the post's tags so the
-// served ad is relevant to the topic.
-const adPublisher = config.ads?.ethicalPublisher || ''
-const showAds = computed(() => !adFree() && !!adPublisher)
-const adKeywords = computed(() => (post()?.data.tags || []).join('|'))
+// ad-free gating: hide the ad slot for subscribers, and only load the adsense
+// script when an ad is actually shown. adsense contextualises from the page
+// content itself, so no manual keywords are needed.
+const adClient = config.ads?.adsenseClient || ''
+const adSlot = config.ads?.adsenseSlot || ''
+const showAds = computed(() => !adFree() && !!adClient && !!adSlot)
 loadAdFree()
 effect(() => {
   if (showAds()) refreshAds()
@@ -252,11 +252,10 @@ function readingTime(body) {
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
-.ea-ad {
+.ad-ins {
+  display: block;
   min-height: 90px;
   width: 100%;
-  display: flex;
-  justify-content: center;
 }
 .ad-slot-remove {
   font-size: 0.8rem;
