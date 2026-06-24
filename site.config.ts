@@ -25,4 +25,16 @@ export const config = {
     rpId: 'matthesketh.pro',
     origin: 'https://admin.matthesketh.pro',
   },
+
+  // tech-relevant display ads (ethicalads). the publisher id is public — it ships
+  // in the client bundle. empty means no ads render (the integration is dormant).
+  ads: {
+    ethicalPublisher: '',
+  },
+
+  // "go ad-free" subscription. price is display-only copy for the /adfree page;
+  // the real charge is the stripe price configured server-side.
+  adfree: {
+    price: '£3/month',
+  },
 }

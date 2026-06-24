@@ -31,6 +31,12 @@
 
       <div class="prose" u-html="post().html"></div>
 
+      <aside class="ad-slot" u-if="showAds()">
+        <span class="ad-slot-label">Sponsored · keeps the blog free</span>
+        <div class="ea-ad" :data-ea-publisher="adPublisher" data-ea-type="image" :data-ea-keywords="adKeywords()"></div>
+        <a class="ad-slot-remove" href="/adfree">Remove ads — for the price of a coffee →</a>
+      </aside>
+
       <footer class="post-footer" u-if="relatedPosts().length > 0">
         <h2 class="related-title">RELATED POSTS</h2>
         <div class="related-list">
@@ -60,10 +66,11 @@
 </template>
 
 <script>
-import { signal, computed } from '@matthesketh/utopia-core'
+import { signal, computed, effect } from '@matthesketh/utopia-core'
 import { currentRoute } from '@matthesketh/utopia-router'
 import { getCollection } from '@matthesketh/utopia-content'
 import { config } from '../../../site.config'
+import { adFree, loadAdFree, refreshAds } from '../../lib/adfree'
 import '../../content.config'
 
 const allPosts = await getCollection('blog')
@@ -98,6 +105,17 @@ const relatedPosts = computed(() => {
       return pTags.some((t) => tags.includes(t))
     })
     .slice(0, 3)
+})
+
+// ad-free gating: hide the ad slot for subscribers, and only load the ethicalads
+// script when an ad is actually shown. keywords come from the post's tags so the
+// served ad is relevant to the topic.
+const adPublisher = config.ads?.ethicalPublisher || ''
+const showAds = computed(() => !adFree() && !!adPublisher)
+const adKeywords = computed(() => (post()?.data.tags || []).join('|'))
+loadAdFree()
+effect(() => {
+  if (showAds()) refreshAds()
 })
 
 const copied = signal(false)
@@ -219,6 +237,38 @@ function readingTime(body) {
   font-size: 0.75rem;
 }
 
+.ad-slot {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ad-slot-label {
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.ea-ad {
+  min-height: 90px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.ad-slot-remove {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ad-slot-remove:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
 .post-footer {
   margin-top: 4rem;
   padding-top: 2rem;

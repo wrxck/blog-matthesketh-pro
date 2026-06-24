@@ -23,6 +23,7 @@
       <div class="footer-inner">
         <span>&copy; {{ currentYear }} {{ config.name }}</span>
         <nav class="footer-links">
+          <a href="/adfree" class="footer-link">Go ad-free</a>
           <a href="/feed.xml" class="footer-link">RSS</a>
           <a href="/atom.xml" class="footer-link">Atom</a>
         </nav>

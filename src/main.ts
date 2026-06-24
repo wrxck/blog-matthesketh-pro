@@ -8,6 +8,7 @@ createRouter([
   { path: '/blog/:slug', component: () => import('./pages/blog/+page.utopia') },
   { path: '/tags', component: () => import('./pages/tags/+page.utopia') },
   { path: '/tags/:tag', component: () => import('./pages/tags/+page.utopia') },
+  { path: '/adfree', component: () => import('./pages/adfree/+page.utopia') },
 ])
 
 mount(App, '#app')

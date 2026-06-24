@@ -1,0 +1,233 @@
+<template>
+  <div class="adfree-page">
+    <h1 class="adfree-title">Read ad-free</h1>
+
+    <div u-if="adFree()" class="adfree-card">
+      <p class="adfree-state">Ad-free is active on this device.</p>
+      <p class="adfree-sub">Thank you for supporting the blog.</p>
+      <button class="adfree-btn" u-on:click="manage()" :disabled="busy()">Manage subscription</button>
+      <p class="adfree-hint">
+        On another device?
+        <input class="adfree-input" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" :value="email()" u-on:input="(e) => email(e.target.value)" />
+        <button class="adfree-link" u-on:click="requestLink()" :disabled="busy() || !email()">email me a link</button>
+      </p>
+    </div>
+
+    <div u-if="!adFree()" class="adfree-card">
+      <p class="adfree-pitch">Support the blog and remove every ad — {{ price }}, cancel anytime.</p>
+      <button class="adfree-btn primary" u-on:click="subscribe()" :disabled="busy()">Go ad-free — {{ price }}</button>
+      <p class="adfree-hint">
+        Already subscribed? Enter your email and
+        <input class="adfree-input" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" :value="email()" u-on:input="(e) => email(e.target.value)" />
+        <button class="adfree-link" u-on:click="requestLink()" :disabled="busy() || !email()">email me a link</button>
+      </p>
+    </div>
+
+    <p class="adfree-msg" u-if="msg()">{{ msg() }}</p>
+    <p class="adfree-back"><a href="/">Back to the blog</a></p>
+  </div>
+</template>
+
+<script>
+import { signal } from '@matthesketh/utopia-core'
+import { config } from '../../../site.config'
+import { adFree, loadAdFree } from '../../lib/adfree'
+
+const email = signal('')
+const busy = signal(false)
+const msg = signal('')
+const price = config.adfree?.price || ''
+
+loadAdFree()
+
+async function postJson(path, body) {
+  const r = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(body || {}),
+  })
+  return { ok: r.ok, data: await r.json().catch(() => ({})) }
+}
+
+async function subscribe() {
+  if (busy()) return
+  busy(true)
+  msg('')
+  try {
+    const { ok, data } = await postJson('/api/adfree/checkout', { email: email() || undefined })
+    if (ok && data.url) {
+      window.location.assign(data.url)
+      return
+    }
+    msg('Subscriptions are not switched on yet — please check back soon.')
+  } catch {
+    msg('Something went wrong — please try again.')
+  }
+  busy(false)
+}
+
+async function requestLink() {
+  if (busy() || !email()) return
+  busy(true)
+  msg('')
+  try {
+    await postJson('/api/adfree/magic', { email: email() })
+    msg('If that email has an ad-free subscription, a link is on its way.')
+  } catch {
+    msg('Something went wrong — please try again.')
+  }
+  busy(false)
+}
+
+async function manage() {
+  if (busy()) return
+  busy(true)
+  try {
+    const { ok, data } = await postJson('/api/adfree/portal', {})
+    if (ok && data.url) {
+      window.location.assign(data.url)
+      return
+    }
+    msg('Could not open the billing portal on this device.')
+  } catch {
+    msg('Something went wrong — please try again.')
+  }
+  busy(false)
+}
+
+// handle the return-from-stripe + magic-link redirect states (client only; the
+// page is also pre-rendered at build time, where window is absent).
+if (typeof window !== 'undefined') {
+  const q = new URLSearchParams(window.location.search)
+  const sessionId = q.get('session_id')
+  if (sessionId) {
+    postJson('/api/adfree/claim-session', { sessionId })
+      .then(({ data }) => {
+        if (data.adFree) {
+          adFree(true)
+          msg('You are now ad-free. Thank you for supporting the blog!')
+        } else {
+          msg('Payment received — it can take a moment to activate.')
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => window.history.replaceState(null, '', '/adfree'))
+  } else if (q.get('claimed')) {
+    loadAdFree()
+    msg('This device is now ad-free.')
+    window.history.replaceState(null, '', '/adfree')
+  } else if (q.get('error') === 'link') {
+    msg('That link has expired — request a new one below.')
+    window.history.replaceState(null, '', '/adfree')
+  } else if (q.get('cancelled')) {
+    msg('Checkout cancelled — you were not charged.')
+    window.history.replaceState(null, '', '/adfree')
+  }
+}
+</script>
+
+<style scoped>
+.adfree-page {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+.adfree-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  margin: 0 0 1.5rem;
+}
+.adfree-card {
+  border: 2px solid var(--color-border);
+  border-radius: 0;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.adfree-pitch,
+.adfree-state {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text);
+}
+.adfree-sub {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+.adfree-btn {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-radius: 0;
+  padding: 0.7rem 1.3rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease;
+}
+.adfree-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+.adfree-btn:active {
+  transform: scale(0.97);
+}
+.adfree-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.adfree-hint {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+.adfree-input {
+  flex: 1;
+  min-width: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.adfree-link {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+  padding: 0;
+}
+.adfree-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.adfree-msg {
+  margin: 1.25rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  font-size: 0.95rem;
+}
+.adfree-back {
+  margin-top: 2rem;
+}
+.adfree-back a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.adfree-back a:hover {
+  color: var(--color-accent);
+}
+</style>

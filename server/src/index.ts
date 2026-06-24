@@ -11,7 +11,8 @@ import { PostsService } from './posts.js'
 import { CredentialStore, registerAuthRoutes } from './auth.js'
 import { requireAuth, initSessionStore, sessionStore } from './session.js'
 import { triggerBuild, getBuildStatus } from './build.js'
-import { db, SESSION_MIGRATION } from './db.js'
+import { db, SESSION_MIGRATION, SUBSCRIBERS_MIGRATION } from './db.js'
+import { registerAdfreeRoutes } from './adfree.js'
 
 const app = Fastify({ logger: true })
 
@@ -24,9 +25,22 @@ await app.register(fastifyCors, {
   credentials: true,
 })
 
+// keep the raw request body alongside the parsed json so the stripe webhook can
+// verify its signature (constructEvent needs the exact bytes); normal json
+// routes are unaffected.
+app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_req, body, done) => {
+  ;(_req as unknown as { rawBody?: Buffer }).rawBody = body as Buffer
+  try {
+    const buf = body as Buffer
+    done(null, buf.length ? JSON.parse(buf.toString('utf8')) : {})
+  } catch (err) {
+    done(err as Error, undefined)
+  }
+})
+
 // database + session init
 await db.connect()
-await db.migrate([SESSION_MIGRATION])
+await db.migrate([SESSION_MIGRATION, SUBSCRIBERS_MIGRATION])
 initSessionStore(db)
 
 // services
@@ -35,6 +49,9 @@ const credentialStore = new CredentialStore(config.dataDir)
 
 // auth routes
 registerAuthRoutes(app, credentialStore)
+
+// ad-free subscription routes (dormant until stripe is configured)
+registerAdfreeRoutes(app)
 
 // post crud routes
 app.get('/api/admin/posts', async (req, reply) => {
