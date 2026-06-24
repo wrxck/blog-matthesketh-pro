@@ -29,7 +29,7 @@ export const config = {
   // tech display ads (google adsense). the client + slot are public — they ship
   // in the client bundle. empty means no ads render (the integration is dormant).
   ads: {
-    adsenseClient: '', // 'ca-pub-…' from your adsense account
+    adsenseClient: 'ca-pub-9199227429999584',
     adsenseSlot: '', // a display ad-unit id created in adsense
   },
 
