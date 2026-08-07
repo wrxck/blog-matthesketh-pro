@@ -1,0 +1,77 @@
+<template>
+  <div class="legal-page">
+    <h1 class="legal-title">Privacy Policy</h1>
+    <p class="legal-updated">Last updated: 24 June 2026</p>
+
+    <p>This site (blog.matthesketh.pro) is a personal blog run by Matt Hesketh. This policy explains what data is collected and how it is used.</p>
+
+    <h2>Advertising &amp; cookies</h2>
+    <p>This site shows ads served by Google AdSense. Third-party vendors, including Google, use cookies and similar identifiers to serve ads based on a user's prior visits to this and other websites.</p>
+    <ul>
+      <li>Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to this site and/or other sites on the internet.</li>
+      <li>You can opt out of personalised advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a>, or opt out of third-party vendors' use of cookies for personalised ads at <a href="https://www.aboutads.info" target="_blank" rel="noopener">aboutads.info</a>.</li>
+    </ul>
+
+    <h2>Consent (EEA, UK &amp; Switzerland)</h2>
+    <p>For visitors in the EEA, UK and Switzerland, a consent message (Google's Consent Management Platform) is shown before personalised ads are served, in line with GDPR and the ePrivacy Directive. You can change or withdraw your consent at any time via the privacy options on the consent banner.</p>
+
+    <h2>The ad-free subscription</h2>
+    <p>If you subscribe to remove ads, your email address and subscription status are processed to provide that service. Payments are handled by Stripe; this site never sees or stores your card details. See <a href="/adfree">the ad-free page</a> to manage or cancel.</p>
+
+    <h2>Your rights</h2>
+    <p>You can request access to, correction of, or deletion of any personal data held about you, and you can lodge a complaint with the ICO (or your local data-protection authority). To exercise any of these, contact the address below.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy? Email <a href="mailto:matt@matthesketh.pro">matt@matthesketh.pro</a>.</p>
+
+    <h2>Changes</h2>
+    <p>This policy may be updated from time to time; the "last updated" date above reflects the latest revision.</p>
+
+    <p class="legal-back"><a href="/">Back to the blog</a></p>
+  </div>
+</template>
+
+<script></script>
+
+<style scoped>
+.legal-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  line-height: 1.7;
+}
+.legal-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  margin: 0 0 0.25rem;
+}
+.legal-updated {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 2rem;
+}
+.legal-page h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  margin: 2rem 0 0.5rem;
+}
+.legal-page a {
+  color: var(--color-accent);
+}
+.legal-page ul {
+  padding-left: 1.2rem;
+}
+.legal-page li {
+  margin: 0.4rem 0;
+}
+.legal-back {
+  margin-top: 2.5rem;
+}
+.legal-back a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.legal-back a:hover {
+  color: var(--color-accent);
+}
+</style>

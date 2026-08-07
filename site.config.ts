@@ -25,4 +25,17 @@ export const config = {
     rpId: 'matthesketh.pro',
     origin: 'https://admin.matthesketh.pro',
   },
+
+  // tech display ads (google adsense). the client + slot are public — they ship
+  // in the client bundle. empty means no ads render (the integration is dormant).
+  ads: {
+    adsenseClient: 'ca-pub-9199227429999584',
+    adsenseSlot: '', // a display ad-unit id created in adsense
+  },
+
+  // "go ad-free" subscription. price is display-only copy for the /adfree page;
+  // the real charge is the stripe price configured server-side.
+  adfree: {
+    price: '£3/month',
+  },
 }

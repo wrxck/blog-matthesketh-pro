@@ -16,7 +16,18 @@ services:
       - DB_PORT=5432
       - DB_NAME=blog_admin
       - DB_USER=blog_admin
-      - DB_PASSWORD=6+Z6BqWnYbn1LtQYYCLPz+kHTGGR1YKsyzVguCdtN5c=
+      # sourced from the fleet vault (off the repo); deploy fails loud if unset.
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set from the fleet vault}
+      # public reader origin (stripe success/cancel + magic-link urls)
+      - PUBLIC_URL=https://blog.matthesketh.pro
+      # ad-free subscription secrets, sourced from the fleet vault. each is
+      # optional — the feature stays dormant until they are set.
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_PRICE_ID=${STRIPE_PRICE_ID:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - ADFREE_SECRET=${ADFREE_SECRET:-}
+      - SMTP_URL=${SMTP_URL:-}
+      - MAIL_FROM=${MAIL_FROM:-Matt Hesketh <hello@matthesketh.pro>}
     networks:
       - default
       - databases
